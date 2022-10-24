@@ -47,12 +47,12 @@ def flatten_building_parts(buildings: GeoDataFrame) -> GeoDataFrame:
 
 def get_building_geometries(_from: Point, radius: int) -> GeoDataFrame:
     """
-    Get all 2D building geometries from an area given a point and 
+    Get all building footprints from an area given a point and 
     radius.
 
     :_from: Point (WGS84 coordinates)
     :radius: radius from point (meters)
-    :return: GeoDataFrame containing all building geometries
+    :return: GeoDataFrame containing building geometries
     """
 
     tags = {"building": True}
@@ -119,53 +119,6 @@ axel_towers = Point(12.565886448579562, 55.675641285999056)
 # København (SAS Radison)
 sas_radison = Point(12.563763249599585, 55.675006335236190)
 
-buildings = get_building_geometries(axel_towers, 200)
+buildings = get_building_geometries(axel_towers, 400)
 buildings['height'] = buildings.to_crs('epsg:25832').geometry.apply(get_median_elevation)
 
-# --------------------------------------------------------
-# Interactive map (using Kepler.gl)
-# --------------------------------------------------------
-cph_map = KeplerGl()
-
-config = {
-    "version": "v1",
-    "config": {
-        "mapState": {
-            "latitude": axel_towers.y,
-            "longitude": axel_towers.x,
-            "zoom": 14.5,
-            "dragRotate": True,
-        },
-         "mapStyle": {
-            "styleType": "satellite",
-        },
-        'visState': {'filters': [],
-            'layers': [{
-                'id': '348zwa8',
-                'type': 'geojson',
-                'config': {
-                    'dataId': 'Buildings',
-                    'label': 'Buildings',
-                    'columns': {'geojson': 'geometry'},
-                    'isVisible': True,
-                    'visConfig': {
-                        'elevationScale': 0.07,
-                        'filled': True,
-                        'enable3d': True,
-                        'wireframe': True
-                    },
-                    'hidden': False,
-                },
-                'visualChannels': {
-                    'heightField': {'name': 'height', 'type': 'real'},
-                    'heightScale': 'linear',
-                }
-            }],
-        },
-    }
-}
-
-_buildings = buildings.copy()
-cph_map.add_data(data=_buildings, name='Buildings')
-cph_map.config = config
-cph_map.save_to_html(file_name='cph_buildings.html')
