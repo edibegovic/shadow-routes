@@ -5,7 +5,7 @@
 ## Utilities
 
 ### Extracting building geometries
-Buildings are modeled using the exsisting 2D geometries from OpenStreetMap (OSM) as a base. Since data on building heights is scarce in OSM, we extract them manually. With high-precision elevation maps based on LIDAR scans [(Danmarks Højdemodel - DHM)](https://kortviseren.dk/side/hoejdemodeller.html), we sample the surface elevation for areas overlaid by the building outlines, using the median value as the definitive height for the entire geometry. 
+Buildings are modeled using the exsisting 2D footprints from OpenStreetMap (OSM) as a base. Since data on building heights is scarce in OSM, we extract them manually. With high-precision elevation maps based on LIDAR scans [(Danmarks Højdemodel - DHM)](https://kortviseren.dk/side/hoejdemodeller.html), we sample the surface elevation for areas overlaid by the building outlines, using the median value as the definitive height for the entire geometry. 
 
 1. `modeling/preprocess_raster_data.py.py` \
     Preprocessing specific for working with tiled raster data from [DHM](https://dataforsyningen.dk/data/930) (GeoTIFF)
