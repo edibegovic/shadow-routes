@@ -12,3 +12,9 @@ Buildings are modeled using the exsisting 2D footprints from OpenStreetMap (OSM)
     
 2. `modeling/osmnx_map.py` \
     Fetches building geometries from OSM and estimates their height based on local GeoTIFF rasters encoding elevation
+
+3. `modeling/project_shadow.py` \
+    Generates shadow geometries given extruded building footprints and timestamp. See [pybdshadow](https://github.com/ni1o1/pybdshadow)
+    
+    ### Example
+    ![Building shadows central CPH](./misc/cph_shadow_demo.jpg)
