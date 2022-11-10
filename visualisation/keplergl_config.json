@@ -1,53 +1,53 @@
 {
-    'version': 'v1',
-    'config': {
-        'mapState': {
-            'latitude': axel_towers.y,
-            'longitude': axel_towers.x,
-            'zoom': 14.5,
-            'dragRotate': True,
+    "version": "v1",
+    "config": {
+        "mapState": {
+            "latitude": 55.675641285999,
+            "longitude": 12.565886448579,
+            "zoom": 14.5,
+            "dragRotate": true
         },
-         'mapStyle': {
-            'styleType': 'satellite',
+         "mapStyle": {
+            "styleType": "satellite"
         },
-        'visState': {'filters': [],
-            'layers': [{
-                'id': '348zwa8',
-                'type': 'geojson',
-                'config': {
-                    'dataId': 'Buildings',
-                    'label': 'Buildings',
-                    'columns': {'geojson': 'geometry'},
-                    'isVisible': True,
-                    'visConfig': {
-                        'elevationScale': 0.07,
-                        'filled': True,
-                        'enable3d': True,
-                        'wireframe': True
+        "visState": {"filters": [],
+            "layers": [{
+                "id": "348zwa8",
+                "type": "geojson",
+                "config": {
+                    "dataId": "Buildings",
+                    "label": "Buildings",
+                    "columns": {"geojson": "geometry"},
+                    "isVisible": true,
+                    "visConfig": {
+                        "elevationScale": 0.07,
+                        "filled": true,
+                        "enable3d": true,
+                        "wireframe": true
                     },
-                    'hidden': False,
+                    "hidden": false
                 },
-                'visualChannels': {
-                    'heightField': {'name': 'height', 'type': 'real'},
-                    'heightScale': 'linear',
+                "visualChannels": {
+                    "heightField": {"name": "height", "type": "real"},
+                    "heightScale": "linear"
                 }
             }, 
             {
-                'id': '448ksi9',
-                'type': 'geojson',
-                'config': {
-                    'dataId': 'Shadows',
-                    'label': 'Shadows',
-                    'color': [30, 30, 30],
-                    'columns': {'geojson': 'geometry'},
-                    'isVisible': True,
-                    'visConfig': {
-                        'filled': True,
-                        'stroked': False,
+                "id": "448ksi9",
+                "type": "geojson",
+                "config": {
+                    "dataId": "Shadows",
+                    "label": "Shadows",
+                    "color": [30, 30, 30],
+                    "columns": {"geojson": "geometry"},
+                    "isVisible": true,
+                    "visConfig": {
+                        "filled": true,
+                        "stroked": false
                     },
-                    'hidden': False,
-                },
-            }],
-        },
+                    "hidden": false
+                }
+            }]
+        }
     }
 }

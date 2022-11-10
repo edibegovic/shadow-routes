@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import geopandas as gpd
 from geopandas import GeoDataFrame
-from keplergl import KeplerGl
 import matplotlib.pyplot as plt
 import networkx as nx
 import osmnx as ox
@@ -119,6 +118,6 @@ axel_towers = Point(12.565886448579562, 55.675641285999056)
 # København (SAS Radison)
 sas_radison = Point(12.563763249599585, 55.675006335236190)
 
-buildings = get_building_geometries(axel_towers, 400)
+buildings = get_building_geometries(axel_towers, 500)
 buildings['height'] = buildings.to_crs('epsg:25832').geometry.apply(get_median_elevation)
 
