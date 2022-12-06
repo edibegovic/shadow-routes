@@ -16,5 +16,5 @@ Buildings are modeled using the exsisting 2D footprints from OpenStreetMap (OSM)
 3. `modeling/project_shadow.py` \
     Generates shadow geometries given extruded building footprints and timestamp. See [pybdshadow](https://github.com/ni1o1/pybdshadow)
     
-    ### Example
-    ![Building shadows central CPH](./misc/demo.gif)
+    ### Demo
+    ![Building shadows central CPH](./misc/demo_gif.gif)
