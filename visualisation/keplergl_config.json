@@ -47,7 +47,44 @@
                     },
                     "hidden": false
                 }
-            }]
+            },
+            {
+                "id": "248ksi0",
+                "type": "geojson",
+                "config": {
+                    "dataId": "Trees",
+                    "label": "Trees",
+                    "color": [0, 100, 0 ],
+                    "columns": {
+                        "geojson": "geometry"
+                    },
+                    "isVisible": true,
+                    "visConfig": {
+                        "filled": true,
+                        "stroked": false                            
+                    },
+                    "hidden": false
+                }
+            },
+            {
+                "id": "148ksi0",
+                "type": "geojson",
+                "config": {
+                    "dataId": "Tree shadows",
+                    "label": "Tree shadows",
+                    "color": [30, 30, 30 ],
+                    "columns": {
+                        "geojson": "geometry"
+                    },
+                    "isVisible": true,
+                    "visConfig": {
+                        "filled": true,
+                        "stroked": false                            
+                    },
+                    "hidden": false
+                }
+            }
+        ]
         }
     }
 }
