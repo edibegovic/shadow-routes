@@ -1,3 +1,4 @@
+
 import numpy as np
 import pandas as pd
 import geopandas as gpd
@@ -62,9 +63,9 @@ def get_building_geometries(_from: Point, radius: int) -> GeoDataFrame:
     building_parts = filter_building_type(buildings, 'relation')
 
     return pd.concat([
-                flatten_building_parts(building_parts), 
-                GeoDataFrame(buildings_whole['geometry'])
-              ]).set_crs('epsg:4326')
+        flatten_building_parts(building_parts), 
+        GeoDataFrame(buildings_whole['geometry'])
+        ]).set_crs('epsg:4326')
 
 # --------------------------------------------------------
 # Rastorio utils
@@ -75,7 +76,7 @@ def to_wgs84(point: Point, reverse=False) -> Point:
     Projects points between ETRS89 and WGS84
     """
     projections = (Proj('epsg:25832'), 
-                   Proj('epsg:4326'))
+            Proj('epsg:4326'))
     inProj, outProj = reversed(projections) if reverse else projections
     transformed_coordinates = transform(inProj, outProj, point.x, point.y)
     return Point(transformed_coordinates)
