@@ -7,47 +7,108 @@
             "zoom": 14.5,
             "dragRotate": true
         },
-         "mapStyle": {
+        "mapStyle": {
             "styleType": "satellite"
         },
-        "visState": {"filters": [],
-            "layers": [{
-                "id": "348zwa8",
-                "type": "geojson",
-                "config": {
-                    "dataId": "Buildings",
-                    "label": "Buildings",
-                    "columns": {"geojson": "geometry"},
-                    "isVisible": true,
-                    "visConfig": {
-                        "elevationScale": 0.07,
-                        "filled": true,
-                        "enable3d": true,
-                        "wireframe": true
-                    },
-                    "hidden": false
+        "visState": {
+            "filters": [],
+            "layers": [
+                {
+                    "id": "path-layer",
+                    "type": "line",
+                    "config": {
+                        "dataId": "Path",
+                        "label": "Path",
+                        "color": [
+                            0,
+                            50,
+                            250
+                        ],
+                        "isVisible": true,
+                        "visConfig": {
+                          "thickness": 8.0
+                        },
+                        "columns": {
+                            "lat0": "s_lat",
+                            "lng0": "s_lng",
+                            "lat1": "t_lat",
+                            "lng1": "t_lng"
+                        }
+                    }
                 },
-                "visualChannels": {
-                    "heightField": {"name": "height", "type": "real"},
-                    "heightScale": "linear"
-                }
-            }, 
-            {
-                "id": "448ksi9",
-                "type": "geojson",
-                "config": {
-                    "dataId": "Shadows",
-                    "label": "Shadows",
-                    "color": [30, 30, 30],
-                    "columns": {"geojson": "geometry"},
-                    "isVisible": true,
-                    "visConfig": {
-                        "filled": true,
-                        "stroked": false
+                {
+                    "id": "sidewalks-layer",
+                    "type": "line",
+                    "config": {
+                        "dataId": "Sidewalks",
+                        "label": "Sidewalks",
+                        "color": [
+                            255,
+                            143,
+                            0
+                        ],
+                        "isVisible": true,
+                        "visConfig": {
+                          "thickness": 4.0
+                        },
+                        "columns": {
+                            "lat0": "s_lat",
+                            "lng0": "s_lng",
+                            "lat1": "t_lat",
+                            "lng1": "t_lng"
+                        }
+                    }
+                },
+                {
+                    "id": "348zwa8",
+                    "type": "geojson",
+                    "config": {
+                        "dataId": "Buildings",
+                        "label": "Buildings",
+                        "color": [0, 128, 128],
+                        "columns": {
+                            "geojson": "geometry"
+                        },
+                        "isVisible": true,
+                        "visConfig": {
+                            "elevationScale": 0.07,
+                            "filled": true,
+                            "enable3d": true,
+                            "wireframe": true
+                        },
+                        "hidden": false
                     },
-                    "hidden": false
+                    "visualChannels": {
+                        "heightField": {
+                            "name": "height",
+                            "type": "real"
+                        },
+                        "heightScale": "linear"
+                    }
+                },
+                {
+                    "id": "448ksi9",
+                    "type": "geojson",
+                    "config": {
+                        "dataId": "Shadows",
+                        "label": "Shadows",
+                        "color": [
+                            30,
+                            30,
+                            30
+                        ],
+                        "columns": {
+                            "geojson": "geometry"
+                        },
+                        "isVisible": true,
+                        "visConfig": {
+                            "filled": true,
+                            "stroked": false
+                        },
+                        "hidden": false
+                    }
                 }
-            }]
+            ]
         }
     }
 }

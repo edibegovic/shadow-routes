@@ -1,12 +1,12 @@
+
 import numpy as np
 import pandas as pd
 import geopandas as gpd
 from geopandas import GeoDataFrame
-import matplotlib.pyplot as plt
 import networkx as nx
 import osmnx as ox
 import rasterio
-from rasterio.warp import calculate_default_transform, reproject, Resampling
+from rasterio.warp import calculate_default_transform, reproject, Resampling, transform_bounds
 from shapely.geometry import Polygon, Point, LineString
 from shapely import wkt
 import shapely
@@ -44,7 +44,7 @@ def flatten_building_parts(buildings: GeoDataFrame) -> GeoDataFrame:
             .to_frame() \
             .set_geometry('geometry')
 
-def get_building_geometries(_from: Point, radius: int) -> GeoDataFrame:
+def get_building_geometries(bbox: [float]) -> GeoDataFrame:
     """
     Get all building footprints from an area given a point and 
     radius.
@@ -53,18 +53,17 @@ def get_building_geometries(_from: Point, radius: int) -> GeoDataFrame:
     :radius: radius from point (meters)
     :return: GeoDataFrame containing building geometries
     """
-
     tags = {"building": True}
-    buildings = ox.geometries_from_point((_from.y, _from.x), tags=tags, dist=radius)
+    buildings = ox.geometries.geometries_from_bbox(*bbox, tags=tags)
     filter_building_type = lambda gdf, _type: gdf[gdf.index.get_level_values('element_type') == _type]
 
     buildings_whole = filter_building_type(buildings, 'way')
     building_parts = filter_building_type(buildings, 'relation')
 
     return pd.concat([
-                flatten_building_parts(building_parts), 
-                GeoDataFrame(buildings_whole['geometry'])
-              ]).set_crs('epsg:4326')
+        flatten_building_parts(building_parts), 
+        GeoDataFrame(buildings_whole['geometry'])
+        ]).set_crs('epsg:4326')
 
 # --------------------------------------------------------
 # Rastorio utils
@@ -75,7 +74,7 @@ def to_wgs84(point: Point, reverse=False) -> Point:
     Projects points between ETRS89 and WGS84
     """
     projections = (Proj('epsg:25832'), 
-                   Proj('epsg:4326'))
+            Proj('epsg:4326'))
     inProj, outProj = reversed(projections) if reverse else projections
     transformed_coordinates = transform(inProj, outProj, point.x, point.y)
     return Point(transformed_coordinates)
@@ -88,7 +87,10 @@ def get_elevation(point: Point) -> float:
     :point: ETRS89
     """
     idx = dat.index(point.x, point.y, precision=1E-9)    
-    return raster_map[idx]
+    if (-1 < idx[0] < raster_map.shape[0]) and (-1 < idx[1] < raster_map.shape[1]):
+        return raster_map[idx]
+
+    return 0.0
 
 def sample_points_polygon(poly: Polygon, n=10) -> [Point]:
     """
@@ -112,12 +114,9 @@ def get_median_elevation(poly: Polygon) -> float:
 # [TEMP] Copenhagen: reference locations
 # --------------------------------------------------------
 
-# København (Axel Towers)
-axel_towers = Point(12.565886448579562, 55.675641285999056)
-
-# København (SAS Radison)
-sas_radison = Point(12.563763249599585, 55.675006335236190)
-
-buildings = get_building_geometries(axel_towers, 500)
+dhm_bounds = transform_bounds(dat.crs, {'init': 'epsg:4326'}, *dat.bounds)
+dhm_bbox = (dhm_bounds[1], dhm_bounds[3], dhm_bounds[2], dhm_bounds[0])
+dhm_bbox = (55.69468513531616, 55.66707153061302, 12.597097109876165, 12.544356607371874)
+buildings = get_building_geometries(dhm_bbox)
 buildings['height'] = buildings.to_crs('epsg:25832').geometry.apply(get_median_elevation)
 
