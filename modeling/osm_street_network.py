@@ -4,18 +4,22 @@ import pandas as pd
 import geopandas as gpd
 from geopandas import GeoDataFrame
 from shapely.geometry import Polygon, Point, LineString, MultiLineString
-from shapely.ops import unary_union
+from shapely.prepared import PreparedGeometry, prep
+from shapely.ops import unary_union, union
 import networkx as nx
 import osmnx as ox
+from rtree import index
 
 # --------------------------------------------------------
 # Fetch street network from OSM
 # --------------------------------------------------------
 
-axel_towers = Point(12.565886448579562, 55.675641285999056)
+# axel_towers = Point(12.565886448579562, 55.675641285999056)
+# G_walk = ox.graph_from_point((axel_towers.y, axel_towers.x), dist=600, network_type='walk', retain_all=True)
+# G_sidewalk = ox.graph_from_point((axel_towers.y, axel_towers.x), dist=600, custom_filter='["sidewalk"]')
 
-G_walk = ox.graph_from_point((axel_towers.y, axel_towers.x), dist=600, network_type='walk', retain_all=True)
-G_sidewalk = ox.graph_from_point((axel_towers.y, axel_towers.x), dist=600, custom_filter='["sidewalk"]')
+G_walk = ox.graph_from_bbox(*dhm_bbox, network_type='walk', retain_all=True)
+G_sidewalk = ox.graph_from_bbox(*dhm_bbox, custom_filter='["sidewalk"]')
 G_full = nx.compose(G_walk, G_sidewalk)
 G = G_full
 
@@ -32,6 +36,7 @@ def get_shadow_coverage(segment: LineString, shadow: Polygon) -> float:
     are in an appropriate CRS.
     """
     intersection = segment.intersection(shadow)
+
     shadow_length = 0
     if isinstance(intersection, LineString):
         shadow_length += intersection.length
@@ -40,6 +45,7 @@ def get_shadow_coverage(segment: LineString, shadow: Polygon) -> float:
             shadow_length += line.length
 
     return shadow_length
+
 
 shadow_polygon = unary_union(shadows.to_crs('epsg:25832')['geometry'])
 
@@ -88,6 +94,7 @@ def faltten_sidewalk_segments(sidewalks: GeoDataFrame) -> GeoDataFrame:
                                                x.coords[1][1])).to_list(), index=sidewalks.index)
 
     return GeoDataFrame(sidewalks, geometry='geometry', crs=crs)
+
 
 sidewalks_plot = faltten_sidewalk_segments(sidewalks)
 

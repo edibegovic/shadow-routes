@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 import geopandas as gpd
 from geopandas import GeoDataFrame
-import matplotlib.pyplot as plt
 import networkx as nx
 import osmnx as ox
 import rasterio
@@ -88,7 +87,10 @@ def get_elevation(point: Point) -> float:
     :point: ETRS89
     """
     idx = dat.index(point.x, point.y, precision=1E-9)    
-    return raster_map[idx]
+    if (-1 < idx[0] < raster_map.shape[0]) and (-1 < idx[1] < raster_map.shape[1]):
+        return raster_map[idx]
+
+    return 0.0
 
 def sample_points_polygon(poly: Polygon, n=10) -> [Point]:
     """
@@ -112,13 +114,9 @@ def get_median_elevation(poly: Polygon) -> float:
 # [TEMP] Copenhagen: reference locations
 # --------------------------------------------------------
 
-# København (Axel Towers)
-axel_towers = Point(12.565886448579562, 55.675641285999056)
-
-# København (SAS Radison)
-sas_radison = Point(12.563763249599585, 55.675006335236190)
-
-dhm_bbox = transform_bounds(dat.crs, {'init': 'epsg:4326'}, *dat.bounds)
+dhm_bounds = transform_bounds(dat.crs, {'init': 'epsg:4326'}, *dat.bounds)
+dhm_bbox = (dhm_bounds[1], dhm_bounds[3], dhm_bounds[2], dhm_bounds[0])
+dhm_bbox = (55.69468513531616, 55.66707153061302, 12.597097109876165, 12.544356607371874)
 buildings = get_building_geometries(dhm_bbox)
 buildings['height'] = buildings.to_crs('epsg:25832').geometry.apply(get_median_elevation)
 
