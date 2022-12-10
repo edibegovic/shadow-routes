@@ -53,6 +53,5 @@ def route(G: Graph, _from: int, to: int, alpha=1.0) -> GeoDataFrame:
     return edge_data
 
 def get_route(all_shadows, sidewalks, start_point, end_point, alpha=1.0):
-    sidewalks = apply_shadow_to_sidewalks(all_shadows, sidewalks)
     G = nx.from_pandas_edgelist(sidewalks.reset_index(), 'u', 'v', edge_attr=True, edge_key='osmid')
     return route(G, start_point, end_point, alpha)
