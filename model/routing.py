@@ -28,7 +28,7 @@ def apply_shadow_to_sidewalks(all_shadows, sidewalks):
     shadow_polygon = unary_union(all_shadows.to_crs('epsg:25832'))
     sidewalks['length'] = sidewalks \
         .to_crs('epsg:25832') \
-        .apply(lambda x: x['geometry'].length, 1)
+        .apply(lambda x: x['geometry'].length + 0.01, 1)
 
     sidewalks['meters_covered'] = sidewalks \
             .to_crs('epsg:25832')['geometry'] \
