@@ -3,8 +3,8 @@ import pybdshadow
 from geopandas import GeoDataFrame
 import geopandas as gpd
 
-def get_buildings_shadows(gdf: GeoDataFrame):
-    date = pd.to_datetime('2022-10-21 14:45:33.95979')\
+def get_buildings_shadows(gdf: GeoDataFrame, date='2022-10-21 14:45:33.95979'):
+    date = pd.to_datetime(date)\
         .tz_localize('Europe/Copenhagen')\
         .tz_convert('UTC')
 
@@ -13,8 +13,8 @@ def get_buildings_shadows(gdf: GeoDataFrame):
     shadows = shadows.set_crs('epsg:4326')
     return shadows
 
-def get_trees_shadows(gdf: GeoDataFrame):
-    date = pd.to_datetime('2022-10-21 14:45:33.95979')\
+def get_trees_shadows(gdf: GeoDataFrame, date='2022-10-21 14:45:33.95979'):
+    date = pd.to_datetime(date)\
         .tz_localize('Europe/Copenhagen')\
         .tz_convert('UTC')
 
