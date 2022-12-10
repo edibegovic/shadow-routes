@@ -13,7 +13,7 @@ import re
 # Trees
 # --------------------------------------------------------
 
-def save_trees_geojson(bbox):
+def save_trees_geojson(bbox, path="data/trees.geojson"):
     trees = gpd.read_file("data/tree_basiss.json")[['geometry']]
     trees['lat'] = trees.geometry.y
     trees['lon'] = trees.geometry.x
@@ -25,7 +25,8 @@ def save_trees_geojson(bbox):
     trees = trees.overlay(boundary, how="intersection")
     trees['geometry'] = trees['geometry'].to_crs(crs=3857).buffer(5)
     trees['height'] = 6
-    trees.to_crs(crs=4326).to_file("data/trees.geojson", driver="GeoJSON")
+    trees.to_crs(crs=4326).to_file(path, driver="GeoJSON")
+    Print(f"Saved to: {path}")
 
 # --------------------------------------------------------
 # Buildings
@@ -94,12 +95,13 @@ def get_building_geometries(bbox: list[float]) -> GeoDataFrame:
         GeoDataFrame(buildings_whole['geometry'])
         ]).set_crs('epsg:4326')
 
-def save_buildings_geojson(bbox):
+def save_buildings_geojson(bbox, path="data/buildings.geojson"):
     buildings = get_building_geometries(bbox)
     surface_data = rasterio.open(r"./data/cph_10x10km_mosaic.tif")
     raster_map = surface_data.read()[0]
     buildings['height'] = buildings.to_crs('epsg:25832').geometry.apply(get_median_elevation, args=(surface_data, raster_map))
-    buildings.to_file("data/buildings.geojson", driver="GeoJSON")
+    buildings.to_file(path, driver="GeoJSON")
+    Print(f"Saved to: {path}")
 
 # --------------------------------------------------------
 # Sidewalks
@@ -139,10 +141,11 @@ def get_sidewalks_network(bbox):
     G_full = nx.compose(G_walk, G_sidewalk)
     return G_full
 
-def save_sidewalks_geojson(bbox):
+def save_sidewalks_geojson(bbox, path="data/sidewalks.geojson"):
     G = get_sidewalks_network(bbox)
 
     _, lines = ox.graph_to_gdfs(G, edges=True)
     sidewalks = lines[["geometry"]]
     sidewalks = sidewalks[['geometry']]
-    sidewalks.to_file("data/sidewalks.geojson", driver="GeoJSON")
+    sidewalks.to_file(path, driver="GeoJSON")
+    Print(f"Saved to: {path}")
