@@ -21,7 +21,7 @@ trees_shadows = shadows.get_trees_shadows(trees, date=timestamp)
 all_shadows = pd.concat([buildings_shadows.geometry, trees_shadows.geometry])
 
 # Calculates shade proportion for sidewalk segments 
-sidewalks_weighted = apply_shadow_to_sidewalks(all_shadows, sidewalks)
+sidewalks_weighted = routing.apply_shadow_to_sidewalks(all_shadows, sidewalks)
 
 route = routing.get_route(all_shadows, sidewalks_weighted, start_point, end_point, alpha)
 sidewalks = geometries.get_sidewalk_segments(sidewalks)
@@ -38,3 +38,4 @@ data_sources = [
 
 
 visualizations.create_html(data_sources)
+
