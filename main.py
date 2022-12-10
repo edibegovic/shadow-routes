@@ -18,22 +18,22 @@ sidewalks = gpd.read_file("./data/sidewalks.geojson")
 timestamp = '2022-10-21 14:45:33.95979'
 buildings_shadows = shadows.get_buildings_shadows(buildings, date=timestamp)
 trees_shadows = shadows.get_trees_shadows(trees, date=timestamp)
-all_shadows = pd.concat([buildings_shadows.geometry, trees_shadows.geometry])
+all_shadows = pd.concat([buildings_shadows.geometry, trees_shadows.geometry]).reset_index(drop=True)
 
 # Calculates shade proportion for sidewalk segments 
 sidewalks_weighted = routing.apply_shadow_to_sidewalks(all_shadows, sidewalks)
 
 route = routing.get_route(all_shadows, sidewalks_weighted, start_point, end_point, alpha)
-sidewalks = geometries.get_sidewalk_segments(sidewalks)
-route = geometries.get_sidewalk_segments(route)
+sidewalk_segments = geometries.get_sidewalk_segments(sidewalks)
+route_segments = geometries.get_sidewalk_segments(route)
 
 data_sources = [
             (buildings, 'Buildings'),
             (buildings_shadows, 'Shadows'),
             (trees, 'Trees'),
             (trees_shadows, 'Tree shadows'),
-            # (route, 'Path'),
-            (sidewalks, 'Sidewalks')
+            (route_segments, 'Path'),
+            (sidewalk_segments, 'Sidewalks')
             ]
 
 
