@@ -23,7 +23,7 @@ def save_trees_geojson(bbox, out_path="data/trees.geojson", data_path="data/tree
     boundary = gpd.GeoDataFrame(index=[0], crs='epsg:4326', geometry=[Polygon(boundary_points)])
 
     trees = trees.overlay(boundary, how="intersection")
-    trees['geometry'] = trees['geometry'].to_crs(crs=3857).buffer(5)
+    trees['geometry'] = trees['geometry'].to_crs(crs=3857).buffer(6)
     trees['height'] = 6
     trees.to_crs(crs=4326).to_file(out_path, driver="GeoJSON")
     print(f"Saved to: {out_path}")

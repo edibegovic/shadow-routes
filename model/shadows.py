@@ -22,7 +22,7 @@ def get_trees_shadows(gdf: GeoDataFrame, date='2022-10-21 14:45:33.95979'):
     gdf['building_id'] = gdf.index 
     shadows = pybdshadow.bdshadow_sunlight(gdf, date)
 
-    gdf['height'] = 2
+    gdf['height'] = 1.5
     subtract = pybdshadow.bdshadow_sunlight(gdf, date)
 
     shadows = shadows.difference(subtract)
