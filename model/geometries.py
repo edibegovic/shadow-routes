@@ -26,7 +26,7 @@ def save_trees_geojson(bbox, out_path="data/trees.geojson", data_path="data/tree
     trees['geometry'] = trees['geometry'].to_crs(crs=3857).buffer(5)
     trees['height'] = 6
     trees.to_crs(crs=4326).to_file(out_path, driver="GeoJSON")
-    Print(f"Saved to: {out_path}")
+    print(f"Saved to: {out_path}")
 
 # --------------------------------------------------------
 # Buildings
@@ -101,7 +101,7 @@ def save_buildings_geojson(bbox, path="data/buildings.geojson"):
     raster_map = surface_data.read()[0]
     buildings['height'] = buildings.to_crs('epsg:25832').geometry.apply(get_median_elevation, args=(surface_data, raster_map))
     buildings.to_file(path, driver="GeoJSON")
-    Print(f"Saved to: {path}")
+    print(f"Saved to: {path}")
 
 # --------------------------------------------------------
 # Sidewalks
