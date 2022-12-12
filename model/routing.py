@@ -4,16 +4,22 @@ import networkx as nx
 from geopandas import GeoDataFrame
 from networkx import Graph
 from math import trunc
+from model import shadows as shadow_mod
 
 
-def get_shadow_coverage(segment: LineString, all_shadow: Polygon) -> float:
+def get_shadow_coverage(segment: LineString, shadows: GeoDataFrame, r_tree=None) -> float:
     """
     Calculates the total length of a LineString that is covered by
     an overlying polygon. 
     OBS: If the desired unit is meters, make sure the geometries 
     are in an appropriate CRS.
     """
-    intersection = segment.intersection(all_shadow)
+    if r_tree is not None:
+        shadow_ids = list(r_tree.intersection(segment.bounds))
+        intersecting_shadows = unary_union(shadows[shadow_ids])
+        intersection = segment.intersection(intersecting_shadows)
+    else:
+        intersection = segment.intersection(shadows)
 
     shadow_length = 0
     if isinstance(intersection, LineString):
@@ -24,15 +30,15 @@ def get_shadow_coverage(segment: LineString, all_shadow: Polygon) -> float:
 
     return shadow_length
 
-def apply_shadow_to_sidewalks(all_shadows, sidewalks):
-    shadow_polygon = unary_union(all_shadows.to_crs('epsg:25832'))
-    sidewalks['length'] = sidewalks \
-        .to_crs('epsg:25832') \
-        .apply(lambda x: x['geometry'].length + 0.01, 1)
+def apply_shadow_to_sidewalks(sidewalks, shadows):
+    sidewalks_25832 =  sidewalks.to_crs('epsg:25832')
+    shadows_25832 = shadows.to_crs('epsg:25832')
+    r_tree_index = shadow_mod.build_rtree_index(shadows_25832)
 
-    sidewalks['meters_covered'] = sidewalks \
-            .to_crs('epsg:25832')['geometry'] \
-            .apply(lambda x: get_shadow_coverage(x, shadow_polygon))
+    sidewalks['length'] = sidewalks_25832.apply(lambda x: x['geometry'].length + 0.01, 1)
+
+    sidewalks['meters_covered'] = sidewalks_25832['geometry'] \
+            .apply(lambda x: get_shadow_coverage(x, shadows_25832, r_tree_index))
 
     sidewalks['percent_covered'] = sidewalks \
             .apply(lambda x: x['meters_covered']/x['length'], 1)
@@ -52,6 +58,6 @@ def route(G: Graph, _from: int, to: int, alpha=1.0) -> GeoDataFrame:
     edge_data = GeoDataFrame([G.get_edge_data(edge[0], edge[1]) for edge in path_edges], geometry='geometry')
     return edge_data
 
-def get_route(all_shadows, sidewalks, start_point, end_point, alpha=1.0):
+def get_route(sidewalks, start_point, end_point, alpha=1.0):
     G = nx.from_pandas_edgelist(sidewalks.reset_index(), 'u', 'v', edge_attr=True, edge_key='osmid')
     return route(G, start_point, end_point, alpha)
