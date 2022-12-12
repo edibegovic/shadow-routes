@@ -136,10 +136,10 @@ def get_sidewalk_segments(sidewalks: GeoDataFrame) -> GeoDataFrame:
     return GeoDataFrame(sidewalks, geometry='geometry', crs=crs)
 
 def get_sidewalks_network(bbox):
-    G_walk = ox.graph_from_bbox(*bbox, network_type='walk', retain_all=True)
-    G_sidewalk = ox.graph_from_bbox(*bbox, custom_filter='["sidewalk"]')
+    G_walk = ox.graph_from_bbox(*bbox, network_type='walk', simplify=False)
+    G_sidewalk = ox.graph_from_bbox(*bbox, custom_filter='["sidewalk"]', simplify=False)
     G_full = nx.compose(G_walk, G_sidewalk)
-    return G_full
+    return ox.simplification.simplify_graph(G_full)
 
 def save_sidewalks_geojson(bbox, out_path="data/sidewalks.geojson"):
     G = get_sidewalks_network(bbox)
