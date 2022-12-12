@@ -3,6 +3,7 @@ __pycache__/
 data/
 cache/
 .ipynb_checkpoints/
+*.html
 
 # macOS junk
 *DS_Store/
