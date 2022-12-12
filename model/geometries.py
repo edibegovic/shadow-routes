@@ -145,7 +145,7 @@ def save_sidewalks_geojson(bbox, path="data/sidewalks.geojson"):
     G = get_sidewalks_network(bbox)
 
     _, lines = ox.graph_to_gdfs(G, edges=True)
-    sidewalks = lines[["geometry"]]
+    sidewalks = lines[["geometry", "highway"]]
     sidewalks = sidewalks[['geometry']]
     sidewalks.to_file(path, driver="GeoJSON")
-    Print(f"Saved to: {path}")
+    print(f"Saved to: {path}")
