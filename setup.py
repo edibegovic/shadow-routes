@@ -5,9 +5,9 @@ import sys
 
 def get_geometries(bbox):
     terrain.load_terrain()
-    geometries.save_buildings_geojson(bbox, path="./data/buildings.geojson")
-    geometries.save_trees_geojson(bbox, path="./data/trees.geojson")
-    geometries.save_sidewalks_geojson(bbox, path="./data/sidewalks.geojson")
+    geometries.save_buildings_geojson(bbox, out_path="./data/buildings.geojson")
+    geometries.save_trees_geojson(bbox, out_path="./data/trees.geojson")
+    geometries.save_sidewalks_geojson(bbox, out_path="./data/sidewalks.geojson")
 
 def get_shadows(hour):
     buildings = gpd.read_file("./data/buildings.geojson")

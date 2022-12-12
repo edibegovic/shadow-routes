@@ -95,13 +95,13 @@ def get_building_geometries(bbox: list[float]) -> GeoDataFrame:
         GeoDataFrame(buildings_whole['geometry'])
         ]).set_crs('epsg:4326')
 
-def save_buildings_geojson(bbox, path="data/buildings.geojson"):
+def save_buildings_geojson(bbox, out_path="data/buildings.geojson"):
     buildings = get_building_geometries(bbox)
     surface_data = rasterio.open(r"./data/cph_10x10km_mosaic.tif")
     raster_map = surface_data.read()[0]
     buildings['height'] = buildings.to_crs('epsg:25832').geometry.apply(get_median_elevation, args=(surface_data, raster_map))
-    buildings.to_file(path, driver="GeoJSON")
-    print(f"Saved to: {path}")
+    buildings.to_file(out_path, driver="GeoJSON")
+    print(f"Saved to: {out_path}")
 
 # --------------------------------------------------------
 # Sidewalks
@@ -141,11 +141,11 @@ def get_sidewalks_network(bbox):
     G_full = nx.compose(G_walk, G_sidewalk)
     return G_full
 
-def save_sidewalks_geojson(bbox, path="data/sidewalks.geojson"):
+def save_sidewalks_geojson(bbox, out_path="data/sidewalks.geojson"):
     G = get_sidewalks_network(bbox)
 
     _, lines = ox.graph_to_gdfs(G, edges=True)
     sidewalks = lines[["geometry", "highway"]]
     sidewalks = sidewalks[['geometry']]
-    sidewalks.to_file(path, driver="GeoJSON")
-    print(f"Saved to: {path}")
+    sidewalks.to_file(out_path, driver="GeoJSON")
+    print(f"Saved to: {out_path}")
