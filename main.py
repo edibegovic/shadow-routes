@@ -2,10 +2,11 @@ from model import shadows, geometries, routing, visualizations
 import geopandas as gpd
 import pandas as pd
 import random
+from functools import reduce
 
-
-start_point = 8491663725
-end_point = 1630693019
+# -----------------------------------------------
+# Load data
+# -----------------------------------------------
 # bbox = (55.68, 55.67, 12.59, 12.58)
 # start_point = #random point selection in bbox
 # end_point = #random point selection in bbox
@@ -15,13 +16,22 @@ buildings = gpd.read_file("./data/buildings.geojson")
 trees = gpd.read_file("./data/trees.geojson")
 sidewalks = gpd.read_file("./data/sidewalks.geojson")
 
+# -----------------------------------------------
+# Project shade
+# -----------------------------------------------
 timestamp = '2022-10-21 14:45:33.95979'
 buildings_shadows = shadows.get_buildings_shadows(buildings, date=timestamp)
 trees_shadows = shadows.get_trees_shadows(trees, date=timestamp)
 all_shadows = pd.concat([buildings_shadows.geometry, trees_shadows.geometry]).reset_index(drop=True)
 
-# Calculates shade proportion for sidewalk segments 
-sidewalks_weighted = routing.apply_shadow_to_sidewalks(all_shadows, sidewalks)
+# -----------------------------------------------
+# Routing
+# -----------------------------------------------
+sidewalks_weighted = routing.apply_shadow_to_sidewalks(all_shadows, sidewalks, r_tree=all_shadows_index)
+
+start_point = 8491663725
+end_point = 1630693019
+alpha = 1.0
 
 route = routing.get_route(all_shadows, sidewalks_weighted, start_point, end_point, alpha)
 sidewalk_segments = geometries.get_sidewalk_segments(sidewalks)
