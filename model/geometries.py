@@ -13,8 +13,8 @@ import re
 # Trees
 # --------------------------------------------------------
 
-def save_trees_geojson(bbox, path="data/trees.geojson"):
-    trees = gpd.read_file("data/tree_basiss.json")[['geometry']]
+def save_trees_geojson(bbox, out_path="data/trees.geojson", data_path="data/tree_basiss.json"):
+    trees = gpd.read_file(data_path)[['geometry']]
     trees['lat'] = trees.geometry.y
     trees['lon'] = trees.geometry.x
     trees = trees
@@ -25,8 +25,8 @@ def save_trees_geojson(bbox, path="data/trees.geojson"):
     trees = trees.overlay(boundary, how="intersection")
     trees['geometry'] = trees['geometry'].to_crs(crs=3857).buffer(5)
     trees['height'] = 6
-    trees.to_crs(crs=4326).to_file(path, driver="GeoJSON")
-    Print(f"Saved to: {path}")
+    trees.to_crs(crs=4326).to_file(out_path, driver="GeoJSON")
+    Print(f"Saved to: {out_path}")
 
 # --------------------------------------------------------
 # Buildings
