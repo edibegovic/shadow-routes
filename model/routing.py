@@ -4,7 +4,7 @@ import networkx as nx
 from geopandas import GeoDataFrame
 from networkx import Graph
 from math import trunc
-from model import shadows as shadow_mod
+from . import shadows as shadow_mod
 
 
 def get_shadow_coverage(segment: LineString, shadows: GeoDataFrame, r_tree=None) -> float:
@@ -33,6 +33,7 @@ def get_shadow_coverage(segment: LineString, shadows: GeoDataFrame, r_tree=None)
 def apply_shadow_to_sidewalks(sidewalks, shadows):
     sidewalks_25832 =  sidewalks.to_crs('epsg:25832')
     shadows_25832 = shadows.to_crs('epsg:25832')
+
     r_tree_index = shadow_mod.build_rtree_index(shadows_25832)
 
     sidewalks['length'] = sidewalks_25832.apply(lambda x: x['geometry'].length + 0.01, 1)
