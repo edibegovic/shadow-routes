@@ -26,7 +26,9 @@ def get_shadows(hour):
     sidewalks_weighted.to_file("data/sidewalks_weighted_"+hour+".geojson", driver="GeoJSON")
 
 def main():
-    bbox = (55.69468513531616, 55.66707153061302, 12.597097109876165, 12.544356607371874)
+    bbox = (55.67510033526866, 55.68521434273881, 12.579297227774566, 12.564148112833434) # Small Copenhagen
+    bbox = (55.69468513531616, 55.66707153061302, 12.597097109876165, 12.544356607371874) # Central Copenhaen
+    bbox = (55.62141308805854, 55.715722643196166, 12.661448679631935, 12.494584296105629) # Greater Copenhagen
     mode = sys.argv[1] if len(sys.argv) > 1 else "geometries"
 
     if mode == "geometries":
