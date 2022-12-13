@@ -5,16 +5,18 @@ import geopandas as gpd
 from rtree import index
 
 def get_buildings_shadows(gdf: GeoDataFrame, date='2022-10-21 14:45:33.95979'):
+    gdf_copy = gdf.copy()
     date = pd.to_datetime(date)\
         .tz_localize('Europe/Copenhagen')\
         .tz_convert('UTC')
 
-    gdf['building_id'] = gdf.index 
-    shadows = pybdshadow.bdshadow_sunlight(gdf, date)
+    gdf_copy['building_id'] = gdf_copy.index 
+    shadows = pybdshadow.bdshadow_sunlight(gdf_copy, date)
     shadows = shadows.set_crs('epsg:4326')
     return shadows
 
 def get_trees_shadows(gdf: GeoDataFrame, date='2022-10-21 14:45:33.95979'):
+    gdf_copy = gdf.copy()
     date = pd.to_datetime(date)\
         .tz_localize('Europe/Copenhagen')\
         .tz_convert('UTC')
