@@ -33,18 +33,19 @@ def get_shadow_coverage(segment: LineString, shadows: GeoDataFrame, r_tree=None)
 def apply_shadow_to_sidewalks(sidewalks, shadows):
     sidewalks_25832 =  sidewalks.to_crs('epsg:25832')
     shadows_25832 = shadows.to_crs('epsg:25832')
+    sidewalks_c = sidewalks.copy()
 
     r_tree_index = shadow_mod.build_rtree_index(shadows_25832)
 
-    sidewalks['length'] = sidewalks_25832.apply(lambda x: x['geometry'].length + 0.01, 1)
+    sidewalks_c['length'] = sidewalks_25832.apply(lambda x: x['geometry'].length + 0.01, 1)
 
-    sidewalks['meters_covered'] = sidewalks_25832['geometry'] \
+    sidewalks_c['meters_covered'] = sidewalks_25832['geometry'] \
             .apply(lambda x: get_shadow_coverage(x, shadows_25832, r_tree_index))
 
-    sidewalks['percent_covered'] = sidewalks \
+    sidewalks_c['percent_covered'] = sidewalks_c \
             .apply(lambda x: x['meters_covered']/x['length'], 1)
 
-    return sidewalks
+    return sidewalks_c
 
 def shade_coverage_weight(data, a):
     return (1 - a) * data['length'] + a * (data['length'] - data['meters_covered'])
