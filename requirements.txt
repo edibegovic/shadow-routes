@@ -1,0 +1,10 @@
+geopandas==0.12.1
+keplergl==0.3.2
+networkx==2.8.8
+numpy==1.22.2
+osmnx==1.2.2
+pandas==1.4.1
+pybdshadow==0.3.3
+rasterio==1.3a3
+Rtree==1.0.1
+Shapely==1.8.1.post1
