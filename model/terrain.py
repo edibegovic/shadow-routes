@@ -2,17 +2,12 @@ import os
 import glob
 import rasterio
 from rasterio.merge import merge
-from rasterio.plot import show
-
 
 # --------------------------------------------------------
-# Merge GeoTIFF tiles
+# Surface data processing
 # --------------------------------------------------------
 
-# Path to directory containing GeoTIFF files
 def merge_geotiff(dirpath, search_criteria):
-    # dirpath = r"./data/DHM/DSM_617_72_TIF_UTM32-ETRS89"
-    # search_criteria = "DSM*.tif"
     q = os.path.join(dirpath, search_criteria)
 
     tif_fps = glob.glob(q)
@@ -30,18 +25,15 @@ def merge_geotiff(dirpath, search_criteria):
 
     return mosaic, out_meta
 
-dsm_mosaic, dsm_meta = merge_geotiff(r"./data/DHM/DSM_617_72_TIF_UTM32-ETRS89",  "DSM*.tif")
-dtm_mosaic, dtm_meta = merge_geotiff(r"./data/DHM/DTM_617_72_TIF_UTM32-ETRS89",  "DTM*.tif")
-
-if dsm_meta == dtm_meta:
-    mosaic = dsm_mosaic - dtm_mosaic
-    out_meta = dsm_meta
-    out_fp = r"./data/cph_10x10km_mosaic.tif"
-    with rasterio.open(out_fp, "w", **out_meta) as dest:
-        dest.write(mosaic)
-    show(mosaic)
-else:
-    raise Exception("Unmatching metadata of subtracted files")
-
-
-
+def load_terrain():
+    dsm_mosaic, dsm_meta = merge_geotiff(r"./data/DHM/DSM_617_72_TIF_UTM32-ETRS89",  "DSM*.tif")
+    dtm_mosaic, dtm_meta = merge_geotiff(r"./data/DHM/DTM_617_72_TIF_UTM32-ETRS89",  "DTM*.tif")
+    if dsm_meta == dtm_meta:
+        mosaic = dsm_mosaic - dtm_mosaic
+        out_meta = dsm_meta
+        out_fp = r"./data/cph_10x10km_mosaic.tif"
+        with rasterio.open(out_fp, "w", **out_meta) as dest:
+            dest.write(mosaic)
+        # show(mosaic)
+    else:
+        raise Exception("Unmatching metadata of subtracted files")

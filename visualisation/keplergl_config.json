@@ -10,8 +10,7 @@
         "mapStyle": {
             "styleType": "satellite"
         },
-        "visState": {
-            "filters": [],
+        "visState": {"filters": [],
             "layers": [
                 {
                     "id": "path-layer",
@@ -65,10 +64,8 @@
                     "config": {
                         "dataId": "Buildings",
                         "label": "Buildings",
-                        "color": [0, 128, 128],
-                        "columns": {
-                            "geojson": "geometry"
-                        },
+                        "color": [32, 178, 170],
+                        "columns": {"geojson": "geometry"},
                         "isVisible": true,
                         "visConfig": {
                             "elevationScale": 0.07,
@@ -79,27 +76,18 @@
                         "hidden": false
                     },
                     "visualChannels": {
-                        "heightField": {
-                            "name": "height",
-                            "type": "real"
-                        },
+                        "heightField": {"name": "height", "type": "real"},
                         "heightScale": "linear"
                     }
-                },
+                }, 
                 {
                     "id": "448ksi9",
                     "type": "geojson",
                     "config": {
                         "dataId": "Shadows",
                         "label": "Shadows",
-                        "color": [
-                            30,
-                            30,
-                            30
-                        ],
-                        "columns": {
-                            "geojson": "geometry"
-                        },
+                        "color": [30, 30, 30],
+                        "columns": {"geojson": "geometry"},
                         "isVisible": true,
                         "visConfig": {
                             "filled": true,
@@ -107,8 +95,44 @@
                         },
                         "hidden": false
                     }
+                },
+                {
+                    "id": "248ksi0",
+                    "type": "geojson",
+                    "config": {
+                        "dataId": "Trees",
+                        "label": "Trees",
+                        "color": [0, 100, 0 ],
+                        "columns": {
+                            "geojson": "geometry"
+                        },
+                        "isVisible": true,
+                        "visConfig": {
+                            "filled": true,
+                            "stroked": false                            
+                        },
+                        "hidden": false
+                    }
+                },
+                {
+                    "id": "148ksi0",
+                    "type": "geojson",
+                    "config": {
+                        "dataId": "Tree shadows",
+                        "label": "Tree shadows",
+                        "color": [30, 30, 30 ],
+                        "columns": {
+                            "geojson": "geometry"
+                        },
+                        "isVisible": true,
+                        "visConfig": {
+                            "filled": true,
+                            "stroked": false                            
+                        },
+                        "hidden": false
+                    }
                 }
-            ]
+        ]
         }
     }
 }

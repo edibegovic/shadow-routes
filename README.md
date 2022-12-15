@@ -32,3 +32,4 @@ Buildings are modeled using the exsisting 2D footprints from OpenStreetMap (OSM)
     
 ### Demo
 ![Building shadows central CPH](./misc/demo_gif.gif)
+
