@@ -14,16 +14,17 @@ import re
 # --------------------------------------------------------
 
 def save_trees_geojson(bbox, out_path="data/trees.geojson", data_path="data/tree_basiss.json"):
-    trees = gpd.read_file(data_path)[['geometry']]
-    trees['lat'] = trees.geometry.y
-    trees['lon'] = trees.geometry.x
-    trees = trees
+    trees = gpd.read_file(data_path)[["geometry", "torso_hoejde"]]
+    trees["height"] = trees.torso_hoejde.replace(
+        {"0-3 meter":1.5, "3 m": 3, "3":3, "3-6 meter":4.5, "over 6 meter": 6}
+    ).fillna(4.5)
+    trees.describe()
 
     boundary_points = [(bbox[2], bbox[0]),  (bbox[3], bbox[0]), (bbox[3], bbox[1]), (bbox[2], bbox[1]), (bbox[2], bbox[0])]
     boundary = gpd.GeoDataFrame(index=[0], crs='epsg:4326', geometry=[Polygon(boundary_points)])
 
     trees = trees.overlay(boundary, how="intersection")
-    trees['geometry'] = trees['geometry'].to_crs(crs=3857).buffer(5)
+    trees['geometry'] = trees['geometry'].to_crs(crs=3857).buffer(6)
     trees['height'] = 6
     trees.to_crs(crs=4326).to_file(out_path, driver="GeoJSON")
     print(f"Saved to: {out_path}")
