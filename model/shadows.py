@@ -4,6 +4,7 @@ from geopandas import GeoDataFrame
 import geopandas as gpd
 from rtree import index
 
+
 def get_buildings_shadows(gdf: GeoDataFrame, date='2022-10-21 14:45:33.95979'):
     gdf_copy = gdf.copy()
     date = pd.to_datetime(date)\
@@ -21,14 +22,16 @@ def get_trees_shadows(gdf: GeoDataFrame, date='2022-10-21 14:45:33.95979'):
         .tz_localize('Europe/Copenhagen')\
         .tz_convert('UTC')
 
-    gdf['building_id'] = gdf.index 
-    shadows = pybdshadow.bdshadow_sunlight(gdf, date)
+    gdf_copy['building_id'] = gdf_copy.index 
+    shadows = pybdshadow.bdshadow_sunlight(gdf_copy, date)
 
-    gdf['height'] = 1.5
-    subtract = pybdshadow.bdshadow_sunlight(gdf, date)
+    # gdf_copy['height'] = 2
+    # subtract = pybdshadow.bdshadow_sunlight(gdf_copy, date)
+    # shadows = shadows.difference(subtract)
+    # shortend_shadows_gdf = gpd.GeoDataFrame(geometry=shadows, crs='epsg:4326')
 
-    shadows = shadows.difference(subtract)
-    return gpd.GeoDataFrame(geometry=shadows, crs='epsg:4326')
+    shadows = shadows.set_crs('epsg:4326')
+    return  shadows
 
 def build_rtree_index(gdf: GeoDataFrame):
     idx = index.Index()

@@ -32,7 +32,7 @@ sidewalk_segments = geometries.get_sidewalk_segments(sidewalks)
 
 start_point = 8491663725
 end_point = 1630693019
-alpha = 1.0
+alpha = 0.0
 
 route = routing.get_route(sidewalks_weighted, start_point, end_point, alpha)
 sidewalk_segments = geometries.get_sidewalk_segments(sidewalks)
@@ -40,9 +40,9 @@ route_segments = geometries.get_sidewalk_segments(route)
 
 data_sources = [
             (buildings, 'Buildings'),
-            (buildings_shadows, 'Shadows'),
-            (trees, 'Trees'),
-            (trees_shadows, 'Tree shadows'),
+            # (buildings_shadows, 'Shadows'),
+            # (trees, 'Trees'),
+            # (trees_shadows, 'Tree shadows'),
             (route_segments, 'Path'),
             (sidewalk_segments, 'Sidewalks')
             ]

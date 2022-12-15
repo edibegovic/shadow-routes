@@ -3,6 +3,9 @@ import geopandas as gpd
 import pandas as pd
 import sys
 
+import importlib
+importlib.reload(geometries)
+
 def get_geometries(bbox):
     terrain.load_terrain()
     geometries.save_buildings_geojson(bbox, out_path="./data/buildings.geojson")
