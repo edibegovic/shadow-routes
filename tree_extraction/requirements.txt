@@ -1,0 +1,13 @@
+Fiona==1.8.22
+geopandas==0.12.2
+matplotlib==3.6.2
+mercantile==1.2.1
+numpy==1.23.5
+osmnx==1.2.2
+Pillow==9.5.0
+pyproj==3.4.1
+rasterio==1.3a3
+Shapely==1.8.1.post1
+skimage==0.0
+torch==1.12.1
+transformers==4.27.4
