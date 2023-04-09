@@ -47,19 +47,27 @@ def apply_shadow_to_sidewalks(sidewalks, shadows):
 
     return sidewalks_c
 
-def shade_coverage_weight(data, a):
+def shade_coverage_weight(data, a) -> float:
     return (1 - a) * data['length'] + a * (data['length'] - data['meters_covered'])
 
-def route(G: Graph, _from: int, to: int, alpha=1.0) -> GeoDataFrame:
-    path = nx.shortest_path(G, _from, to, 
-            weight=lambda u, v, d: shade_coverage_weight(d, alpha))
+def route(G: Graph, _from: int, _to: int, alpha=1.0) -> GeoDataFrame:
+    path = nx.shortest_path(G, _from, _to, 
+            weight=lambda u, v, d: shade_coverage_weight(d, alpha) if alpha > 0.0 else 1.0)
 
     path_subgraph = nx.subgraph(G, path)
     path_edges = list(path_subgraph.edges())
 
-    edge_data = GeoDataFrame([G.get_edge_data(edge[0], edge[1]) for edge in path_edges], geometry='geometry')
+    # print(path_edges)
+    edge_data = GeoDataFrame([G.get_edge_data(edge[0], edge[1]) for edge in path_edges], geometry='geometry', crs='epsg:4326')
     return edge_data
 
-def get_route(sidewalks, start_point, end_point, alpha=1.0):
+def get_route(sidewalks: GeoDataFrame, start_point: int, end_point: int, alpha: float = 1.0):
     G = nx.from_pandas_edgelist(sidewalks.reset_index(), 'u', 'v', edge_attr=True, edge_key='osmid')
     return route(G, start_point, end_point, alpha)
+
+def interpolate_route(sidewalks: GeoDataFrame, _from: Point, _to: Point):
+    G = nx.from_pandas_edgelist(sidewalks.reset_index(), 'u', 'v', edge_attr=True, edge_key='osmid')
+    start_point, _ = min(G.edges(), key=lambda n: G.edges[n]['geometry'].distance(_from))
+    end_point, _ = min(G.edges(), key=lambda n: G.edges[n]['geometry'].distance(_to))
+    return route(G, start_point, end_point, 0.0)
+

@@ -1,137 +1,160 @@
 {
-    "version": "v1",
-    "config": {
-        "mapState": {
-            "latitude": 55.675641285999,
-            "longitude": 12.565886448579,
-            "zoom": 14.5,
-            "dragRotate": true
+  "version": "v1",
+  "config": {
+    "mapState": {
+      "latitude": 55.675641285999,
+      "longitude": 12.565886448579,
+      "zoom": 14.5,
+      "dragRotate": true
+    },
+    "mapStyle": {
+      "styleType": "satellite"
+    },
+    "visState": {"filters": [],
+      "layers": [
+        {
+          "id": "path-layer",
+          "type": "line",
+          "config": {
+            "dataId": "Path",
+            "label": "Path",
+            "color": [
+              0,
+              50,
+              250
+            ],
+            "isVisible": true,
+            "visConfig": {
+              "thickness": 8.0
+            },
+            "columns": {
+              "lat0": "s_lat",
+              "lng0": "s_lng",
+              "lat1": "t_lat",
+              "lng1": "t_lng"
+            }
+          }
         },
-        "mapStyle": {
-            "styleType": "satellite"
+        {
+          "id": "path-layer-2",
+          "type": "line",
+          "config": {
+            "dataId": "Path_google",
+            "label": "Path_google",
+            "color": [
+              223,
+              73,
+              22
+            ],
+            "isVisible": true,
+            "visConfig": {
+              "thickness": 8.0
+            },
+            "columns": {
+              "lat0": "s_lat",
+              "lng0": "s_lng",
+              "lat1": "t_lat",
+              "lng1": "t_lng"
+            }
+          }
         },
-        "visState": {"filters": [],
-            "layers": [
-                {
-                    "id": "path-layer",
-                    "type": "line",
-                    "config": {
-                        "dataId": "Path",
-                        "label": "Path",
-                        "color": [
-                            0,
-                            50,
-                            250
-                        ],
-                        "isVisible": true,
-                        "visConfig": {
-                          "thickness": 8.0
-                        },
-                        "columns": {
-                            "lat0": "s_lat",
-                            "lng0": "s_lng",
-                            "lat1": "t_lat",
-                            "lng1": "t_lng"
-                        }
-                    }
-                },
-                {
-                    "id": "sidewalks-layer",
-                    "type": "line",
-                    "config": {
-                        "dataId": "Sidewalks",
-                        "label": "Sidewalks",
-                        "color": [
-                            255,
-                            143,
-                            0
-                        ],
-                        "isVisible": true,
-                        "visConfig": {
-                          "thickness": 4.0
-                        },
-                        "columns": {
-                            "lat0": "s_lat",
-                            "lng0": "s_lng",
-                            "lat1": "t_lat",
-                            "lng1": "t_lng"
-                        }
-                    }
-                },
-                {
-                    "id": "348zwa8",
-                    "type": "geojson",
-                    "config": {
-                        "dataId": "Buildings",
-                        "label": "Buildings",
-                        "color": [32, 178, 170],
-                        "columns": {"geojson": "geometry"},
-                        "isVisible": true,
-                        "visConfig": {
-                            "elevationScale": 0.07,
-                            "filled": true,
-                            "enable3d": true,
-                            "wireframe": true
-                        },
-                        "hidden": false
-                    },
-                    "visualChannels": {
-                        "heightField": {"name": "height", "type": "real"},
-                        "heightScale": "linear"
-                    }
-                }, 
-                {
-                    "id": "448ksi9",
-                    "type": "geojson",
-                    "config": {
-                        "dataId": "Shadows",
-                        "label": "Shadows",
-                        "color": [30, 30, 30],
-                        "columns": {"geojson": "geometry"},
-                        "isVisible": true,
-                        "visConfig": {
-                            "filled": true,
-                            "stroked": false
-                        },
-                        "hidden": false
-                    }
-                },
-                {
-                    "id": "248ksi0",
-                    "type": "geojson",
-                    "config": {
-                        "dataId": "Trees",
-                        "label": "Trees",
-                        "color": [0, 100, 0 ],
-                        "columns": {
-                            "geojson": "geometry"
-                        },
-                        "isVisible": true,
-                        "visConfig": {
-                            "filled": true,
-                            "stroked": false                            
-                        },
-                        "hidden": false
-                    }
-                },
-                {
-                    "id": "148ksi0",
-                    "type": "geojson",
-                    "config": {
-                        "dataId": "Tree shadows",
-                        "label": "Tree shadows",
-                        "color": [30, 30, 30 ],
-                        "columns": {
-                            "geojson": "geometry"
-                        },
-                        "isVisible": true,
-                        "visConfig": {
-                            "filled": true,
-                            "stroked": false                            
-                        },
-                        "hidden": false
-                    }
-                }
+        {
+        "id": "sidewalks-layer",
+        "type": "line",
+        "config": {
+        "dataId": "Sidewalks",
+        "label": "Sidewalks",
+        "color": [
+        255,
+        143,
+        0
+      ],
+      "isVisible": true,
+      "visConfig": {
+        "thickness": 4.0
+      },
+      "columns": {
+        "lat0": "s_lat",
+        "lng0": "s_lng",
+        "lat1": "t_lat",
+        "lng1": "t_lng"
+      }
+    }
+  },
+  {
+  "id": "348zwa8",
+  "type": "geojson",
+  "config": {
+    "dataId": "Buildings",
+    "label": "Buildings",
+    "color": [32, 178, 170],
+    "columns": {"geojson": "geometry"},
+    "isVisible": true,
+    "visConfig": {
+      "elevationScale": 0.07,
+      "filled": true,
+      "enable3d": true,
+      "wireframe": true
+    },
+    "hidden": false
+  },
+  "visualChannels": {
+    "heightField": {"name": "height", "type": "real"},
+    "heightScale": "linear"
+  }
+}, 
+{
+  "id": "448ksi9",
+  "type": "geojson",
+  "config": {
+    "dataId": "Shadows",
+    "label": "Shadows",
+    "color": [30, 30, 30],
+    "columns": {"geojson": "geometry"},
+    "isVisible": true,
+    "visConfig": {
+      "filled": true,
+      "stroked": false
+    },
+    "hidden": false
+  }
+},
+{
+  "id": "248ksi0",
+  "type": "geojson",
+  "config": {
+    "dataId": "Trees",
+    "label": "Trees",
+    "color": [0, 100, 0 ],
+    "columns": {
+      "geojson": "geometry"
+    },
+    "isVisible": true,
+    "visConfig": {
+      "filled": true,
+      "stroked": false                            
+    },
+    "hidden": false
+  }
+},
+{
+  "id": "148ksi0",
+  "type": "geojson",
+  "config": {
+    "dataId": "Tree shadows",
+    "label": "Tree shadows",
+    "color": [30, 30, 30 ],
+    "columns": {
+      "geojson": "geometry"
+    },
+    "isVisible": true,
+    "visConfig": {
+      "filled": true,
+      "stroked": false                            
+    },
+    "hidden": false
+  }
+}
         ]
         }
     }

@@ -136,6 +136,21 @@ def get_sidewalk_segments(sidewalks: GeoDataFrame) -> GeoDataFrame:
 
     return GeoDataFrame(sidewalks, geometry='geometry', crs=crs)
 
+def get_bike_paths(bbox: list[float]) -> GeoDataFrame:
+    G_bike = ox.graph_from_bbox(*bbox, network_type='bike')
+    G_car = ox.graph_from_bbox(*bbox, network_type='drive')
+    G = nx.compose(G_bike, G_car)
+    return G
+
+def save_bike_paths_geojson(bbox, out_path="data/bike_paths.geojson"):
+    G = get_bike_paths(bbox)
+
+    _, lines = ox.graph_to_gdfs(G, edges=True)
+    sidewalks = lines[["geometry", "highway"]]
+    sidewalks = sidewalks[['geometry']]
+    sidewalks.to_file(out_path, driver="GeoJSON")
+    print(f"Saved to: {out_path}")
+
 def get_sidewalks_network(bbox):
     G_walk = ox.graph_from_bbox(*bbox, network_type='walk', simplify=False)
     G_sidewalk = ox.graph_from_bbox(*bbox, custom_filter='["sidewalk"]', simplify=False)
