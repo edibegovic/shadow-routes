@@ -10,52 +10,121 @@ from rtree import index
 import osmnx as ox
 from keplergl import KeplerGl
 from shapely.ops import unary_union, nearest_points
+from suncalc import get_position
+import math
+from shapely import affinity
+import random
 
 class Geometry(object):
     def __init__(self, bbox=None):
         if bbox:
             self.bbox = bbox
         else:
-            self.bbox = (
-                55.67510033526866, 
-                55.68521434273881, 
-                12.579297227774566, 
-                12.564148112833434,
-                ) # central Copenhagen
+            self.bbox = {
+                "y_min":55.67510033526866, 
+                "y_max": 55.68521434273881, 
+                "x_max": 12.579297227774566, 
+                "x_min": 12.564148112833434,
+             } # central Copenhagen
         self.crs = 4326
         self.gdf = None
 
     def save_geojson(self, out_path=None):
         if out_path:
-            self.geometry.to_file(out_path, driver="GeoJSON")
+            self.gdf.to_file(out_path, driver="GeoJSON")
             print(f"Saved to: {out_path}")
         else:
-            raise Exception("No output path provided!")
-    
-    def get_geometry(self):
-        return self.geometry
-
-    def __get_shadows(self, hour):
-        date = pd.to_datetime(date)\
-            .tz_localize('Europe/Copenhagen')\
-            .tz_convert('UTC')
-
-        gdf_copy = self.gdf.copy()
-        gdf_copy['building_id'] = gdf_copy.index 
-        shadows = pybdshadow.bdshadow_sunlight(gdf_copy, date)
-        shadows = shadows.set_crs('epsg:4326')
-        return shadows        
+            raise Exception("No output path provided!") 
 
 class Trees(Geometry):
     def __init__(self, bbox=None):
         super().__init__(bbox)
-        self.load()
-    
-    def load(self, in_path):
-        pass
 
-    def get_shadows(self, hour):
-        return super().__get_shadows(hour)
+    def load(self, in_path="data/tree_basiss_small.json"):
+        gdf = gpd.read_file(in_path)[["geometry", "torso_hoejde"]]
+        gdf = gdf[
+            (gdf.geometry.x >= self.bbox["x_min"]) &
+            (gdf.geometry.x <= self.bbox["x_max"]) &
+            (gdf.geometry.y >= self.bbox["y_min"]) &
+            (gdf.geometry.y <= self.bbox["y_max"])
+        ]
+
+        gdf["height"] = gdf.torso_hoejde.replace(
+            {"0-3 meter":1.5, "3 m": 3, "3":3, "3-6 meter":4.5, "over 6 meter": 6}
+        ).fillna(4.5)
+
+        gdf = gdf.to_crs(epsg=3857)
+        gdf["crown_radius"] = np.random.randint(2, 6, gdf.shape[0])
+        gdf["crown_ratio"] = np.random.randint(4, 6, gdf.shape[0])/10
+        gdf["geometry"] = gdf.apply(lambda row: row.geometry.buffer(row.crown_radius), axis=1)
+        
+        self.gdf = gdf[["geometry", "height", "crown_ratio", "crown_radius"]].to_crs(epsg=self.crs)
+
+    def from_file(self, in_path="data/GeoJSON/trees.geojson"):
+        self.gdf = gpd.read_file(in_path)
+
+    def inner_tree(self, poly, shrink_factor=0.5):
+        xs = list(poly.exterior.coords.xy[0])
+        ys = list(poly.exterior.coords.xy[1])
+        x_center = 0.5 * min(xs) + 0.5 * max(xs)
+        y_center = 0.5 * min(ys) + 0.5 * max(ys)
+        min_corner = Point(min(xs), min(ys))
+        center = Point(x_center, y_center)
+        shrink_distance = center.distance(min_corner)*shrink_factor
+        my_polygon_resized = poly.buffer(-shrink_distance)
+        return my_polygon_resized
+    
+    def layer_shade(self, geom, height):
+        distance = height/math.tan(self.altitude)
+        lon_distance = distance*math.sin(self.azimuth)
+        lat_distance = distance*math.cos(self.azimuth)
+        shade = affinity.translate(geom, lon_distance, lat_distance)
+        return shade
+    
+    def tree_shade(self, row):
+        geom = row.geometry
+        height = row.height
+        crown_ratio = row.crown_ratio
+
+        inner_tree = self.inner_tree(geom, shrink_factor=0.2)
+
+        l1 = (inner_tree, height)
+        l2 = (geom, (1 - crown_ratio/2) * height)
+        l3 = (inner_tree, (1-crown_ratio) * height)
+        layers = [l1, l2, l3]
+
+        shades = [self.layer_shade(g, h) for g, h in layers]
+
+        trunk = LineString([
+            geom.centroid,
+            self.layer_shade(geom.centroid, height)
+        ]).buffer(0.3)
+
+        shade = shapely.ops.unary_union(shades)
+        shade = shade.convex_hull
+        shade = shapely.ops.unary_union([shade, trunk])
+
+        return shade
+
+
+    def get_shadows(self, date, precision=4, details=0.4):
+        lon1, lat1, lon2, lat2  = self.gdf.bounds.mean()
+        lon = (lon1+lon2)/2
+        lat = (lat1+lat2)/2
+        sun_position = get_position(date, lon, lat)
+        if (sun_position['altitude']<0):
+            raise ValueError("Given time before sunrise or after sunset")
+        self.azimuth = sun_position["azimuth"]
+        self.altitude = sun_position["altitude"]
+
+
+        trees_mercator = self.gdf.to_crs(epsg=3857)
+        shadows_geom = trees_mercator.apply(lambda row: self.tree_shade(row), axis=1)
+        shadows_gdf = gpd.GeoDataFrame(
+            crs='epsg:3857', 
+            geometry=gpd.GeoSeries(shadows_geom)
+            ).to_crs(epsg=4326)
+        return shadows_gdf
 
 class Buildings(Geometry):
     def __init__(self, bbox=None):
@@ -91,7 +160,7 @@ class Buildings(Geometry):
         self.gdf = gdf
 
     def get_shadows(self, hour):
-        return super().__get_shadows(hour)
+        pass
 
 class Sidewalks(Geometry):
     def __init__(self, bbox=None):
