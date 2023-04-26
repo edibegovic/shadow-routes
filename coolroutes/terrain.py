@@ -20,7 +20,7 @@ def merge_files(dirpath, search_criteria):
     
     return dest_raster, meta
 
-def save_geotiff():
+def create_geotiff():
     dsm_raster, dsm_meta = merge_files(r"./data/DHM/DSM_617_72_TIF_UTM32-ETRS89",  "DSM*.tif")
     dtm_raster, dtm_meta = merge_files(r"./data/DHM/DTM_617_72_TIF_UTM32-ETRS89",  "DTM*.tif")
 
