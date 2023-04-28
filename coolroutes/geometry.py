@@ -12,7 +12,8 @@ import rasterio
 from rtree import index
 from suncalc import get_position
 import osmnx as ox
-
+import googlemaps
+import datetime
 
 class Geometry(object):
     def __init__(self, bbox=None):
@@ -20,11 +21,18 @@ class Geometry(object):
             self.bbox = bbox
         else:
             self.bbox = {
-                "y_min" :55.67510033526866, 
-                "y_max" : 55.68521434273881, 
-                "x_max" : 12.579297227774566, 
-                "x_min" : 12.564148112833434,
-             } # central Copenhagen
+                "y_min" : 55.62141308805854, 
+                "y_max" : 55.715722643196166, 
+                "x_max" : 12.661448679631935, 
+                "x_min" : 12.494584296105629,
+             } # greater Copenhagen
+        # else:
+        #     self.bbox = {
+        #         "y_min" :55.67510033526866, 
+        #         "y_max" : 55.68521434273881, 
+        #         "x_max" : 12.579297227774566, 
+        #         "x_min" : 12.564148112833434,
+        #      } # small Copenhagen
         self.crs = 4326
         self.gdf = None
         self.path = None
@@ -171,100 +179,81 @@ class Buildings(Geometry):
         shadows = shadows.set_crs(crs=self.crs)
         return shadows
 
-class Sidewalks(Geometry):
+class Network(Geometry):
     def __init__(self, bbox=None):
         super().__init__(bbox)
+        self.path = "./model/bike_network.geojson"
 
-    def __build_rtree(gdf: gpd.GeoDataFrame):
-        idx = index.Index()
-        for i, shape in enumerate(gdf):
-            idx.insert(i, shape.bounds)
-        return idx
+    def load_osm(self):
+        bbox = (self.bbox["y_max"],
+            self.bbox["y_min"],
+            self.bbox["x_max"],
+            self.bbox["x_min"],
+            )
+        
+        G_bike = ox.graph_from_bbox(
+            *bbox,
+            network_type='bike',
+            retain_all=True,
+            simplify=False)
+        
+        G_walk = ox.graph_from_bbox(
+            *bbox,
+            network_type='walk',
+            custom_filter='["highway"~"footway|unclassified|pedestrian|living_street|service|path"]',
+            retain_all=True,
+            simplify=False)
+        
+        G_car = ox.graph_from_bbox(
+            *bbox, 
+            network_type='drive',
+            retain_all=True,
+            simplify=False)
+        
+        G = nx.compose(G_bike, G_walk)
+        G = nx.compose(G, G_car)
 
-    def __get_shadow_coverage(segment: LineString, shadows: gpd.GeoDataFrame, r_tree=None) -> float:
-        """
-        Calculates the total length of a LineString that is covered by
-        an overlying polygon. 
-        OBS: If the desired unit is meters, make sure the geometries 
-        are in an appropriate CRS.
-        """
-        if r_tree is not None:
-            shadow_ids = list(r_tree.intersection(segment.bounds))
-            intersecting_shadows = unary_union(shadows[shadow_ids])
-            intersection = segment.intersection(intersecting_shadows)
-        else:
-            intersection = segment.intersection(shadows)
+        # filter to only public roads connected into giant connected component
+        access_restricted = ["no", "private", "permit", "delivery", "destination", "customers"]
+        selected_edges = [(u, v, d) for u, v, d in G.edges(data=True) if ("access" in d and not d["access"] in access_restricted) or ("access" not in d)]
+        G_filtered = nx.Graph(selected_edges)
+        G_filtered = nx.subgraph(G_filtered, list(nx.connected_components(G_filtered))[0])
+        G = nx.subgraph(G, G_filtered.nodes())
 
-        shadow_length = 0
-        if isinstance(intersection, LineString):
-            shadow_length += intersection.length
-        elif isinstance(intersection, MultiLineString):
-            for line in intersection:
-                shadow_length += line.length
-
-        return shadow_length
-    
-    def __extract_line_segments(segments: LineString) -> list[Point]:
-        points = [list(p) for p in segments.coords]
-        return [source+target for source, target in zip(points, points[1:])]
-
-    def __shade_coverage_weight(self, data, a):
-        return (1 - a) * data['length'] + a * (data['length'] - data['meters_covered'])
-
-    def load(self):
-        G_walk = ox.graph_from_bbox(self.bbox, network_type='walk', simplify=False)
-        G_sidewalk = ox.graph_from_bbox(self.bbox, custom_filter='["sidewalk"]', simplify=False)
-        G_full = nx.compose(G_walk, G_sidewalk)
-        G = ox.simplification.simplify_graph(G_full)
         _, lines = ox.graph_to_gdfs(G, edges=True)
-        sidewalks = lines[["geometry", "highway"]]
-        sidewalks = sidewalks[['geometry']]
-        sidewalks['length'] = sidewalks.to_crs('epsg:25832').apply(lambda x: x['geometry'].length + 0.01, 1)
-        self.geometry = sidewalks.to_crs(self.crs)
+        lines = lines.reset_index()
+        lines = lines[["u", "v", "osmid", "geometry"]]
 
-    def update_shadow(self, shadows):
-        sidewalks_25832 =  self.geometry.to_crs('epsg:25832')
-        shadows_25832 = shadows.to_crs('epsg:25832')
+        lines_mercator = lines.to_crs(25832)
+        lines_mercator["length"] = lines_mercator.apply(lambda row: row['geometry'].length + 0.01, axis=1)
 
-        r_tree_index = self.__build_rtree(shadows_25832)
-
-        self.geometry['meters_covered'] = sidewalks_25832['geometry'] \
-                .apply(lambda x: self.__get_shadow_coverage(x, shadows_25832, r_tree_index))
-
-        self.geometry['percent_covered'] = sidewalks_25832 \
-                .apply(lambda x: x['meters_covered']/x['length'], 1)
-
-    def get_segments(self):
-        """
-        Flattens a LineString representation of edges, such that there is
-        only one pair of source and target points per row. 
-        We also add seperate columns for each coordinate (needed for kepler.gl plotting)
-        """
-        sidewalks = self.geometry.copy()
-        sidewalks['geometry'] = sidewalks['geometry'] \
-                                .apply(self.__extract_line_segments)
-
-        sidewalks = sidewalks.explode('geometry')
-        sidewalks['geometry'] = sidewalks['geometry'] \
-                .apply(lambda x: [(x[0], x[1]), (x[2], x[3])]) \
-                .apply(lambda x: LineString(x))
-
-        sidewalks[['s_lng', 's_lat', 't_lng', 't_lat']] = pd.DataFrame(
-            sidewalks['geometry'].apply(lambda x: (x.coords[0][0], 
-                                                x.coords[0][1], 
-                                                x.coords[1][0], 
-                                                x.coords[1][1])).to_list(), index=sidewalks.index)
-
-        return gpd.GeoDataFrame(sidewalks, geometry='geometry', crs=self.crs)
-
-    def get_route(self, start_point, end_point, alpha):
-        G = nx.from_pandas_edgelist(self.geometry.reset_index(), 'u', 'v', edge_attr=True, edge_key='osmid')
-        path = nx.shortest_path(G, start_point, end_point,
-                weight=lambda u, v, d: self.__shade_coverage_weight(d, alpha))
+        self.gdf = lines_mercator.to_crs(self.crs)
+        return self
+    
+    def get_shortest_route(self, start_point, end_point):
+        G = nx.from_pandas_edgelist(self.gdf, 'u', 'v', edge_attr=True, edge_key='osmid')
+        start_point, _ = min(G.edges(), key=lambda n: G.edges[n]['geometry'].distance(start_point))
+        end_point, _ = min(G.edges(), key=lambda n: G.edges[n]['geometry'].distance(end_point))
+        path = nx.shortest_path(G, start_point, end_point, weight=lambda u, v, d: d["length"])
 
         path_subgraph = nx.subgraph(G, path)
         path_edges = list(path_subgraph.edges())
+        path_gdf = gpd.GeoDataFrame([G.get_edge_data(edge[0], edge[1]) for edge in path_edges], geometry='geometry', crs=self.crs)
+        return path_gdf
+    
+    def get_google_route(self, start_point, end_point):
+        with open("./data/googlemaps_API") as f:
+            API_key = f.readline()
+        gmaps = googlemaps.Client(key=API_key)
 
-        route = gpd.GeoDataFrame([G.get_edge_data(edge[0], edge[1]) for edge in path_edges], geometry='geometry')
+        route = gmaps.directions((start_point.y, start_point.x), (end_point.y, end_point.x), \
+                                mode='bicycling', 
+                                departure_time=datetime.now())[0]
 
+        legs = route['legs'][0]['steps']
+        coords = [googlemaps.convert.decode_polyline(leg['polyline']['points']) for leg in legs]
+        coords = [coord for sublist in coords for coord in sublist]  # flatten coords
+        coords = [(coord['lng'], coord['lat']) for coord in coords]  
+        route = LineString(coords)
+        route = gpd.GeoDataFrame(geometry=[route], crs='epsg:4326')
         return route
