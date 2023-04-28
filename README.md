@@ -1,18 +1,18 @@
 # File tree for input datasets
-.
-└── data/
-    └── DHM/
-        ├── DSM_617_72_TIF_UTM32-ETRS89/
-        │   ├── DSM_1km_id.tif
-        │   └── ...
-        ├── DTM_617_72_TIF_UTM32-ETRS89/
-        │   ├── DTM_1km_id.tif
-        │   └── ...
-        ├── tier/
-        │   └── tier_cph.db
-        ├── municipality trees/
-        │   └── tree_bassis.json
-        └── googlemaps_API
+. \
+└── data/ \
+    └── DHM/ \
+        ├── DSM_617_72_TIF_UTM32-ETRS89/ \
+        │   ├── DSM_1km_id.tif \
+        │   └── ... \
+        ├── DTM_617_72_TIF_UTM32-ETRS89/ \
+        │   ├── DTM_1km_id.tif \
+        │   └── ... \
+        ├── tier/ \
+        │   └── tier_cph.db \
+        ├── municipality trees/ \
+        │   └── tree_bassis.json \
+        └── googlemaps_API \
 
 
 # Shadow Routes
