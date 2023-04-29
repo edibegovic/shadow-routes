@@ -42,13 +42,17 @@ def save_rides():
     records = gpd.GeoDataFrame(locations, geometry=gpd.points_from_xy(locations.lng, locations.lat), crs=4326)
     unique_bike_ids = list(set(records.internal_id))
 
-    records_mercator = records.to_crs(3857)
+    records_mercator = records.to_crs(25832)
 
     rides = pd.DataFrame()
-    for bike_id in unique_bike_ids[:10]:
+    for bike_id in unique_bike_ids:
         bike_records = records_mercator[records_mercator.internal_id == bike_id]
         bike_rides = extract_valid_rides(bike_records)
         rides = pd.concat([rides, bike_rides])
 
+    base_point = Point(707075.1489904693, 6171947.488004295)
+    rides = rides[rides.geometry.distance(base_point) > 1000]
+
     rides = rides.to_crs(4326)
+    rides = rides[["timestamp", "geometry"]]
     rides.to_file("./model/rides.geojson", driver="GeoJSON")
