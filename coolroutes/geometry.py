@@ -14,6 +14,10 @@ from suncalc import get_position
 import osmnx as ox
 import googlemaps
 import datetime
+import pathlib
+import os
+
+ROOT_DIR = os.path.dirname(__file__)
 
 class Geometry(object):
     def __init__(self, bbox=None):
@@ -49,16 +53,16 @@ class Geometry(object):
 
     def save_geojson(self, path = None):
         path = path if path else self.path
-        self.gdf.to_file(path, driver="GeoJSON")
+        self.gdf.to_file(ROOT_DIR+path, driver="GeoJSON")
         
     def load_geojson(self):
-        self.gdf = gpd.read_file(self.path)
+        self.gdf = gpd.read_file(ROOT_DIR+self.path)
         return self
 
 class Trees(Geometry):
     def __init__(self, bbox=None):
         super().__init__(bbox)
-        self.path = "./model/trees.geojson"
+        self.path = "/../model/trees.geojson"
 
     def load_municipality_dataset(self, in_path="data/tree_basiss.json"):
         gdf = gpd.read_file(in_path)[["geometry", "torso_hoejde"]]
@@ -141,7 +145,7 @@ class Trees(Geometry):
 class Buildings(Geometry):
     def __init__(self, bbox=None):
         super().__init__(bbox)
-        self.path = "./model/buildings.geojson"
+        self.path = "/../model/buildings.geojson"
 
     def get_buildings_elevation(self, poly, n=100):
         minx, miny, maxx, maxy = poly.geometry.bounds
@@ -182,7 +186,7 @@ class Buildings(Geometry):
 class Network(Geometry):
     def __init__(self, bbox=None):
         super().__init__(bbox)
-        self.path = "./model/bike_network.geojson"
+        self.path = r"/../model/bike_network.geojson"
 
     def load_osm(self):
         bbox = (self.bbox["y_max"],
