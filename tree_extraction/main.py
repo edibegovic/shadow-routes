@@ -50,10 +50,11 @@ tile_path = satellite_imagery.get_tile(bounds_si, output_dir="./data/si_tiles/")
 image = Image.open(tile_path, mode='r')
 image = image.convert("RGB")
 
-# Split the image in 4x4 parts
+# Split the image in 5x5 parts
+splits = 5 
 w, h = image.size
-w, h = w // 5, h // 5
-crop_bounds = [(i*w, j*h, (i+1)*w, (j+1)*h) for j in range(5) for i in range(5)]
+w, h = w // splits, h // splits
+crop_bounds = [(i*w, j*h, (i+1)*w, (j+1)*h) for j in range(splits) for i in range(splits)]
 images = [image.crop(bounds) for bounds in crop_bounds]
 
 
@@ -84,9 +85,9 @@ for i, image in enumerate(images):
     masks.append(mask_t)
 
 # Merge the 4x4 parts into a single image
-mask_full = np.zeros((h * 5, w * 5), dtype=np.uint8)
+mask_full = np.zeros((h * splits, w * splits), dtype=np.uint8)
 for i, predicted_mask in enumerate(masks):
-    x, y = i % 5, i // 5
+    x, y = i % splits, i // splits
     mask_full[y * h : (y + 1) * h, x * w : (x + 1) * w] = predicted_mask
 
 mask_full[mask_full > 1] = 0
@@ -149,19 +150,11 @@ crs = veg_meta['crs']
 mask_poly_path = './data/masks/mask_' + '_'.join([str(int(x)) for x in list(bounds)]) + '.geojson'
 shapes_gdf.to_file(mask_poly_path, driver='GeoJSON', schema=schema, crs=crs)
 
-# with fiona.open(mask_poly_path, 'w', driver='GeoJSON', crs=crs, schema=schema) as dst:
-#     for shp, val in shapes:
-#         geom = shape(shp).buffer(0)
-#         feature = {'geometry': geom.__geo_interface__, 'properties': {}}
-#         dst.write(feature)
-
 
 # ----------------------------------------------
 # Clip CHM with vegetation mask
 # ----------------------------------------------
 
-# mask_gdf = gpd.read_file(mask_poly_path)
-# mask_geom = mask_gdf.to_crs('epsg:25832').geometry
 mask_geom = shapes_gdf.to_crs('epsg:25832').geometry
 
 # Mask the CHM raster with the vegetation mask
