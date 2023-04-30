@@ -1,3 +1,4 @@
+
 from utils import satellite_imagery
 from PIL import Image
 import matplotlib.pyplot as plt
@@ -10,6 +11,8 @@ import pyproj
 import rasterio.features
 import fiona
 from shapely.geometry import shape
+from shapely.geometry import MultiPoint, Point
+from itertools import combinations
 from rasterio.mask import mask
 import geopandas as gpd
 
@@ -17,7 +20,7 @@ import geopandas as gpd
 # Load CHM Raster (tile)
 # ----------------------------------------------
 
-chm_path = "../data/DHM/CHM_617_72_TIF_UTM32-ETRS89/CHM_1km_6173_723.tif"
+chm_path = "../data/DHM/CHM_617_72_TIF_UTM32-ETRS89/CHM_1km_6175_723.tif"
 chm = rasterio.open(chm_path)
 
 bounds = chm.bounds
@@ -49,8 +52,8 @@ image = image.convert("RGB")
 
 # Split the image in 4x4 parts
 w, h = image.size
-w, h = w // 4, h // 4
-crop_bounds = [(i*w, j*h, (i+1)*w, (j+1)*h) for j in range(4) for i in range(4)]
+w, h = w // 5, h // 5
+crop_bounds = [(i*w, j*h, (i+1)*w, (j+1)*h) for j in range(5) for i in range(5)]
 images = [image.crop(bounds) for bounds in crop_bounds]
 
 
@@ -77,13 +80,13 @@ for i, image in enumerate(images):
     print(f"Processing image {i + 1} of {len(images)}")
     sub_image_path = os.path.join(os.getcwd(), f"./temp/images/sub_image_{i}.pkl")
     os.system(f'python ./utils/transformer_model.py "{sub_image_path}"')
-    mask = np.load(f"./temp/masks/mask_{i}.npy")
-    masks.append(mask)
+    mask_t = np.load(f"./temp/masks/mask_{i}.npy")
+    masks.append(mask_t)
 
 # Merge the 4x4 parts into a single image
-mask_full = np.zeros((h * 4, w * 4), dtype=np.uint8)
+mask_full = np.zeros((h * 5, w * 5), dtype=np.uint8)
 for i, predicted_mask in enumerate(masks):
-    x, y = i % 4, i // 4
+    x, y = i % 5, i // 5
     mask_full[y * h : (y + 1) * h, x * w : (x + 1) * w] = predicted_mask
 
 mask_full[mask_full > 1] = 0
@@ -138,22 +141,28 @@ with rasterio.open(mask_path) as src:
 
 shapes = list(rasterio.features.shapes(veg_mask, transform=veg_meta['transform']))
 
+shapes_gdf = gpd.GeoDataFrame([{'geometry': shape(s[0]), 'value': s[1]} for s in shapes], crs=veg_meta['crs'])
+shapes_gdf = shapes_gdf[shapes_gdf.area != shapes_gdf.area.max()]['geometry']
+
 schema = {'geometry': 'Polygon', 'properties': {}}
 crs = veg_meta['crs']
 mask_poly_path = './data/masks/mask_' + '_'.join([str(int(x)) for x in list(bounds)]) + '.geojson'
-with fiona.open(mask_poly_path, 'w', driver='GeoJSON', crs=crs, schema=schema) as dst:
-    for shp, val in shapes[:-1]:
-        geom = shape(shp).buffer(0)
-        feature = {'geometry': geom.__geo_interface__, 'properties': {}}
-        dst.write(feature)
+shapes_gdf.to_file(mask_poly_path, driver='GeoJSON', schema=schema, crs=crs)
+
+# with fiona.open(mask_poly_path, 'w', driver='GeoJSON', crs=crs, schema=schema) as dst:
+#     for shp, val in shapes:
+#         geom = shape(shp).buffer(0)
+#         feature = {'geometry': geom.__geo_interface__, 'properties': {}}
+#         dst.write(feature)
 
 
 # ----------------------------------------------
 # Clip CHM with vegetation mask
 # ----------------------------------------------
 
-mask_gdf = gpd.read_file(mask_poly_path)
-mask_geom = mask_gdf.to_crs('epsg:25832').geometry
+# mask_gdf = gpd.read_file(mask_poly_path)
+# mask_geom = mask_gdf.to_crs('epsg:25832').geometry
+mask_geom = shapes_gdf.to_crs('epsg:25832').geometry
 
 # Mask the CHM raster with the vegetation mask
 masked_chm, out_transform = mask(chm, mask_geom, crop=True, all_touched=True, invert=False, nodata=0)
@@ -176,3 +185,55 @@ masked_chm_path = './data/clipped_chm/cchm_' + '_'.join([str(int(x)) for x in li
 with rasterio.open(masked_chm_path, "w", **out_meta) as dest:
     dest.write(masked_chm)
 
+
+
+# ----------------------------------------------
+# Segment trees using R
+# ----------------------------------------------
+
+# !!! USE R SCRIPT TO DETECT AND SEGMENT TREES
+
+# ----------------------------------------------
+# Clean tree segmentation
+# ----------------------------------------------
+
+# Load geojson file with tree segmentation
+
+tree_seg = gpd.read_file('/Users/edibegovic/Desktop/crowns5.geojson')
+
+
+tree_seg = tree_seg[tree_seg['convhull_area'] > 1.2]
+
+# all geometries whose area:perimeter ratio is less than 3.5 are removed
+tree_seg['perimeter'] = tree_seg['geometry'].boundary.length
+tree_seg['area'] = tree_seg['geometry'].area
+
+# Ignore non-dense trees (false positives)
+tree_seg['ratio'] = (tree_seg['area']*4)/(tree_seg['perimeter']**2)
+tree_seg = tree_seg[tree_seg['ratio'] > 0.15]
+
+def calculate_diameter(polygon):
+    vertices = MultiPoint(polygon.exterior.coords)
+    min_rotated_rect = vertices.minimum_rotated_rectangle
+    diameter = max(Point(v1).distance(Point(v2)) for v1, v2 in combinations(min_rotated_rect.exterior.coords, 2))
+    return diameter
+
+tree_seg['diameter'] = tree_seg['geometry'].apply(calculate_diameter)
+tree_seg['centroid'] = tree_seg['geometry'].centroid
+
+# Make tree_seg_round with replacing polygons geometry (in tree_seg) with circles based on centriod and diameter
+tree_seg_round = tree_seg.copy()
+tree_seg_round['geometry'] = tree_seg_round.apply(lambda x: Point(x['centroid']).buffer(x['diameter']/2), axis=1)
+
+tree_seg_round = tree_seg_round.drop(columns=['centroid'])
+
+# export tree segmentation as geojson
+tree_seg_round.to_file('/Users/edibegovic/Desktop/crowns6.geojson', driver='GeoJSON')
+
+
+# make a copy of tree_seg and set its geometry the the centroid point
+tree_seg_centroid = tree_seg.copy()
+tree_seg_centroid['geometry'] = tree_seg_centroid['geometry'].centroid
+
+# export to geojson
+tree_seg_centroid['geometry'].to_file('/Users/edibegovic/Desktop/crowns6_centroid.geojson', driver='GeoJSON')
