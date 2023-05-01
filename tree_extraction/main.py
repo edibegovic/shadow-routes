@@ -20,7 +20,7 @@ import geopandas as gpd
 # Load CHM Raster (tile)
 # ----------------------------------------------
 
-chm_path = "../data/DHM/CHM_617_72_TIF_UTM32-ETRS89/CHM_1km_6175_723.tif"
+chm_path = "../data/DHM/CHM_617_72_TIF_UTM32-ETRS89/CHM_1km_6174_726.tif"
 chm = rasterio.open(chm_path)
 
 bounds = chm.bounds
@@ -184,18 +184,35 @@ with rasterio.open(masked_chm_path, "w", **out_meta) as dest:
 # Segment trees using R
 # ----------------------------------------------
 
-# !!! USE R SCRIPT TO DETECT AND SEGMENT TREES
+if not os.path.exists("./temp/tree_segments"):
+    os.makedirs("./temp/tree_segments")
+
+# remove all files in ./temp/tree_segments
+for f in os.listdir("./temp/tree_segments"):
+    os.remove(os.path.join("./temp/tree_segments", f))
+
+# get filename of masked_chm_path (OUTPUT path)
+segment_fn = os.path.basename(masked_chm_path) \
+                    .replace(".tif", ".geojson") \
+                    .replace("cchm", "segments_raw")
+
+segment_path = os.path.join(os.getcwd(), f"temp/tree_segments/{segment_fn}")
+
+# Run tree segmentation R script
+os.system(f'Rscript ./utils/tree_detection.r "{masked_chm_path}" "{segment_path}"')
+
 
 # ----------------------------------------------
 # Clean tree segmentation
 # ----------------------------------------------
 
+# tree_seg = gpd.read_file('/Users/edibegovic/Desktop/crowns_w_height.geojson')
+
 # Load geojson file with tree segmentation
+tree_seg = gpd.read_file(segment_path)
+tree_seg['geometry'] = tree_seg['geometry'].convex_hull
 
-tree_seg = gpd.read_file('/Users/edibegovic/Desktop/crowns5.geojson')
-
-
-tree_seg = tree_seg[tree_seg['convhull_area'] > 1.2]
+tree_seg = tree_seg[tree_seg.area > 1.2]
 
 # all geometries whose area:perimeter ratio is less than 3.5 are removed
 tree_seg['perimeter'] = tree_seg['geometry'].boundary.length
@@ -214,19 +231,30 @@ def calculate_diameter(polygon):
 tree_seg['diameter'] = tree_seg['geometry'].apply(calculate_diameter)
 tree_seg['centroid'] = tree_seg['geometry'].centroid
 
+# Get tree height from masked CHM
+chm_masked = rasterio.open(masked_chm_path)
+def get_highest_value(masked_chm, polygon):
+    masked_array, _ = rasterio.mask.mask(masked_chm, [polygon], crop=True, filled=False)
+    highest_value = np.nanmax(masked_array)
+    return highest_value
+
+tree_seg['height'] = tree_seg['geometry'].apply(lambda polygon: get_highest_value(chm_masked, polygon))
+
 # Make tree_seg_round with replacing polygons geometry (in tree_seg) with circles based on centriod and diameter
 tree_seg_round = tree_seg.copy()
 tree_seg_round['geometry'] = tree_seg_round.apply(lambda x: Point(x['centroid']).buffer(x['diameter']/2), axis=1)
-
 tree_seg_round = tree_seg_round.drop(columns=['centroid'])
 
+# ----------------------------------------------
+# Export canopies
+# ----------------------------------------------
+if not os.path.exists("./data/canopies"):
+    os.makedirs("./data/canopies")
+
 # export tree segmentation as geojson
-tree_seg_round.to_file('/Users/edibegovic/Desktop/crowns6.geojson', driver='GeoJSON')
+canopy_fn = os.path.basename(masked_chm_path) \
+            .replace(".tif", ".geojson") \
+            .replace("cchm", "canopy")
 
-
-# make a copy of tree_seg and set its geometry the the centroid point
-tree_seg_centroid = tree_seg.copy()
-tree_seg_centroid['geometry'] = tree_seg_centroid['geometry'].centroid
-
-# export to geojson
-tree_seg_centroid['geometry'].to_file('/Users/edibegovic/Desktop/crowns6_centroid.geojson', driver='GeoJSON')
+canopy_path = "./data/canopies/" + canopy_fn
+tree_seg_round.to_file(canopy_path, driver='GeoJSON')
