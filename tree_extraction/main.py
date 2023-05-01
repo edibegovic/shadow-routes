@@ -22,19 +22,20 @@ import geopandas as gpd
 
 chm_path = "../data/DHM/CHM_617_72_TIF_UTM32-ETRS89/CHM_1km_6174_726.tif"
 chm = rasterio.open(chm_path)
-
 bounds = chm.bounds
 
 # ----------------------------------------------
 # Get Aerial Image Tile
 # ----------------------------------------------
 
+padding = 30 # meters
+
 # Convert bounds to WGS84 (without using transformer_model)
 bounds_wgs84 = pyproj.transform(
     pyproj.Proj(chm.crs),
     pyproj.Proj(init='epsg:4326'),
-    [bounds.left, bounds.right],
-    [bounds.top, bounds.bottom]
+    [bounds.left-padding, bounds.right+padding],
+    [bounds.top+padding, bounds.bottom-padding]
 )
 
 
@@ -98,17 +99,17 @@ mask_full[mask_full > 1] = 0
 # ----------------------------------------------
 
 # Convert bounds to web mercator (epsg:900913)
-bounds_wgs84 = pyproj.transform(
+bounds_wm = pyproj.transform(
     pyproj.Proj(chm.crs),
     pyproj.Proj(init='epsg:900913'),
-    [bounds.left, bounds.right],
-    [bounds.top, bounds.bottom]
+    [bounds.left-padding, bounds.right+padding],
+    [bounds.top+padding, bounds.bottom-padding]
 )
 
-top_left_x = bounds_wgs84[0][0]
-top_left_y = bounds_wgs84[1][0]
-bottom_right_x = bounds_wgs84[0][1]
-bottom_right_y = bounds_wgs84[1][1]
+top_left_x = bounds_wm[0][0]
+top_left_y = bounds_wm[1][0]
+bottom_right_x = bounds_wm[0][1]
+bottom_right_y = bounds_wm[1][1]
 
 mask_full = mask_full*255
 
@@ -245,6 +246,11 @@ tree_seg_round = tree_seg.copy()
 tree_seg_round['geometry'] = tree_seg_round.apply(lambda x: Point(x['centroid']).buffer(x['diameter']/2), axis=1)
 tree_seg_round = tree_seg_round.drop(columns=['centroid'])
 
+# Misc. cleaning
+tree_seg_round = tree_seg_round[tree_seg_round['height'] > 2.6]
+tree_seg_round = tree_seg_round[~((tree_seg_round['area'] < 10) & (tree_seg_round['height'] > 16))]
+tree_seg_round = tree_seg_round[~((tree_seg_round['area'] < 6) & (tree_seg_round['height'] > 12))]
+
 # ----------------------------------------------
 # Export canopies
 # ----------------------------------------------
@@ -257,4 +263,8 @@ canopy_fn = os.path.basename(masked_chm_path) \
             .replace("cchm", "canopy")
 
 canopy_path = "./data/canopies/" + canopy_fn
-tree_seg_round.to_file(canopy_path, driver='GeoJSON')
+
+cols = ['geometry', 'height', 'diameter']
+tree_seg_round[cols].to_file(canopy_path, driver='GeoJSON')
+
+tree_seg_round.columns
