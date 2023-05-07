@@ -1,5 +1,5 @@
 # Shadow Routes
-This repository contains the code for the "shadow routes" research project, which aims to discover low-temperature walking routes in a city by incorporating shade data into routing engines.
+This repository contains the code for the "shadow routes" research project which aims to discover shaded cycling routes in Copenhagen.
 
 ## File tree overview for input data
 ```
