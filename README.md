@@ -1,4 +1,8 @@
-# File tree for input datasets
+# Shadow Routes
+This repository contains the code for the "shadow routes" research project, which aims to discover low-temperature walking routes in a city by incorporating shade data into routing engines.
+
+## File tree overview for input data
+```
 . \
 └── data/ \
     └── DHM/ \
@@ -13,10 +17,7 @@
         ├── municipality trees/ \
         │   └── tree_bassis.json \
         └── googlemaps_API \
-
-
-# Shadow Routes
-This repository contains the code for the "shadow routes" research project, which aims to discover low-temperature walking routes in a city by incorporating shade data into routing engines.
+```
 
 ## Utilities
 
