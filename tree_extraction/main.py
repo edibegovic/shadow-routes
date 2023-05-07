@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from rasterio.transform import from_origin
 import numpy as np
 import pickle
+import sys
 import os
 import rasterio
 import pyproj
@@ -19,8 +20,9 @@ import geopandas as gpd
 # ----------------------------------------------
 # Load CHM Raster (tile)
 # ----------------------------------------------
-
 chm_path = "../data/DHM/CHM_617_72_TIF_UTM32-ETRS89/CHM_1km_6174_726.tif"
+chm_path = sys.argv[1]
+
 chm = rasterio.open(chm_path)
 bounds = chm.bounds
 
@@ -266,5 +268,3 @@ canopy_path = "./data/canopies/" + canopy_fn
 
 cols = ['geometry', 'height', 'diameter']
 tree_seg_round[cols].to_file(canopy_path, driver='GeoJSON')
-
-tree_seg_round.columns
