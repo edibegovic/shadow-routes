@@ -3,9 +3,9 @@ This repository contains the code for the "shadow routes" research project, whic
 
 ## File tree overview for input data
 ```
-. \
-└── data/ \
-    └── DHM/ \
+.
+└── data/
+    └── DHM/
         ├── DSM_617_72_TIF_UTM32-ETRS89/
         │   ├── DSM_1km_id.tif
         │   └── ...
