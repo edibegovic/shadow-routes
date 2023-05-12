@@ -55,7 +55,11 @@ class Geometry(object):
         path = path if path else self.path
         self.gdf.to_file(ROOT_DIR+path, driver="GeoJSON")
         
-    def load_geojson(self):
+    def load_geojson(self, input_path):
+        if input_path:
+            self.gdf = gpd.read_file(input_path)
+            return self
+
         self.gdf = gpd.read_file(ROOT_DIR+self.path)
         return self
 
@@ -64,8 +68,8 @@ class Trees(Geometry):
         super().__init__(bbox)
         self.path = "/../model/trees.geojson"
 
-    def load_municipality_dataset(self, in_path="data/tree_basiss.json"):
-        gdf = gpd.read_file(in_path)[["geometry", "torso_hoejde"]]
+    def load_municipality_dataset(self, input_path="data/tree_basiss.json"):
+        gdf = gpd.read_file(input_path)[["geometry", "torso_hoejde"]]
         gdf = gdf[
             (gdf.geometry.x >= self.bbox["x_min"]) &
             (gdf.geometry.x <= self.bbox["x_max"]) &
@@ -87,9 +91,21 @@ class Trees(Geometry):
         self.gdf = gdf[["geometry", "height", "crown_ratio", "crown_radius"]].to_crs(epsg=self.crs)
         return self
     
-    def load_extraction_dataset(self, in_path=""):
-        pass
+    def load_extraction_dataset(self, input_path=None):
+        if input_path:
+            gdf = gpd.read_file(input_path)
+        else:
+            print("No path given, loading default dataset (Copenhagen Municipality)")
+            load_municipality_dataset()
+            return self
 
+        gdf.to_crs(epsg=3857, inplace=True)
+        gdf['crown_ratio'] = 0.5
+        gdf["geometry"] = gdf.apply(lambda row:
+            row.geometry.buffer(row.crown_radius*2.5, resolution=2), axis=1)
+        self.gdf = gdf[["geometry", "height", "crown_ratio", "crown_radius"]].to_crs(epsg=self.crs)
+        return self
+        
     def inner_tree(self, poly, shrink_factor=0.5):
         xs = list(poly.exterior.coords.xy[0])
         ys = list(poly.exterior.coords.xy[1])
@@ -169,7 +185,7 @@ class Buildings(Geometry):
         gdf = ox.geometries.geometries_from_bbox(*self.bbox.values(), tags=tags)
         gdf = gdf.reset_index()[["osmid", "geometry"]].set_index("osmid")
 
-        self.CHM_data = rasterio.open("./data/GeoTIFF/CHM.tif")
+        self.CHM_data = rasterio.open("./data/DHM/CPH_CHM.tif")
         gdf["height"] = gdf.apply(self.get_buildings_elevation, axis=1)
     
         self.crs = gdf.crs
@@ -199,20 +215,20 @@ class Network(Geometry):
             *bbox,
             network_type='bike',
             retain_all=True,
-            simplify=False)
+            simplify=True)
         
         G_walk = ox.graph_from_bbox(
             *bbox,
             network_type='walk',
             custom_filter='["highway"~"footway|unclassified|pedestrian|living_street|service|path"]',
             retain_all=True,
-            simplify=False)
+            simplify=True)
         
         G_car = ox.graph_from_bbox(
             *bbox, 
             network_type='drive',
             retain_all=True,
-            simplify=False)
+            simplify=True)
         
         G = nx.compose(G_bike, G_walk)
         G = nx.compose(G, G_car)
