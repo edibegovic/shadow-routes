@@ -102,7 +102,7 @@ class Trees(Geometry):
         gdf.to_crs(epsg=3857, inplace=True)
         gdf['crown_ratio'] = 0.5
         gdf["geometry"] = gdf.apply(lambda row:
-            row.geometry.buffer(row.crown_radius*2.5, resolution=2), axis=1)
+            row.geometry.buffer(row.crown_radius, resolution=2), axis=1)
         self.gdf = gdf[["geometry", "height", "crown_ratio", "crown_radius"]].to_crs(epsg=self.crs)
         return self
         
@@ -179,6 +179,15 @@ class Buildings(Geometry):
         sample_points = [(p.x, p.y) for p in sample_points]
         heights = list(self.CHM_data.sample(sample_points, 1))
         return np.median(heights)
+
+    def load_geojson(self, input_path):
+        if input_path:
+            self.gdf = gpd.read_file(input_path)
+            self.gdf = self.gdf[self.gdf.type == "Polygon"]
+            return self
+
+        self.gdf = gpd.read_file(ROOT_DIR+self.path)
+        return self
 
     def load_osm(self):
         tags = {"building": True}
