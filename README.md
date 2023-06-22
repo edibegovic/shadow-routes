@@ -1,5 +1,21 @@
-# Shadow Routes
-This repository contains the code for the "shadow routes" research project which aims to discover shaded cycling routes in Copenhagen.
+# Shade Gaps in Copenhagen Bicycle Network
+This repository contains the code for identifying shade gaps along the bicycle network of Copenhagen. <br>
+The resources are provided as-is and documentation is mostly provided through exemplary notebooks (see `/experiments`). <br>
+<br>
+Feel free to send a message for further information :)
+
+## Data
+
+| Filename | Description           | Link                |
+|----------|-----------------------|-------------------------|
+| rides.geojson | Origin-Distination pairs of rentable e-bikes in Copenhagen (TIER). <br> The dataset contains records of rides over a 3 month period in the spring of 2023. | [⬇ Download](https://www.dropbox.com/s/cj1tav4oa22wsrk/rides.geojson?dl=1) |
+| trees.geojson | Contains all extracted trees incl. crown radius and height. | [⬇ Download](https://www.dropbox.com/s/ow2c0ozrkbdp82y/trees_CPH.geojson?dl=1) |
+| network_simple_norm_traffic.geojson | Simplified bicycle network (OSM) with normalised traffic attribute for segments | [⬇ Download](https://www.dropbox.com/s/bg7i0hmrr0jnne7/network_simple_norm_traffic.geojson?dl=1) |
+
+
+All other data is available through their original sources: <br>
+[Dataforsyningen (LiDAR point clouds and elevation rasters)](https://dataforsyningen.dk/data/926) <br>
+[OpenStreetMap (bicycle network and building footprints)](https://www.openstreetmap.org/#map=6/62.994/17.637) <br>
 
 ## File tree overview for input data
 ```
